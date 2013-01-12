@@ -1,0 +1,7 @@
+USE dcasedb;
+
+DELETE FROM NodeLink;
+DELETE FROM DBNode;
+DELETE FROM Commit;
+DELETE FROM Context;
+DELETE FROM Argument;
