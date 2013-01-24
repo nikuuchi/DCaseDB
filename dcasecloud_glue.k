@@ -484,7 +484,8 @@ class DCaseArgument {
 	}
 
 	Commit Commit(String method, Json argument) {
-		return this.commits.addCommit(method,argument);
+		//TODO
+		//return this.commits.addCommit(method,argument);
 	}
 
 	@Public Branch GetBranch(int BranchId) {
@@ -652,7 +653,7 @@ class DriverMySQL extends DBDriver {
 	}
 
 	Json GetDBNodeById(int nodeId) {
-		ResultSet r = this.con.query("SELECT argument_id,branch_id FROM DBNode WHERE id="+ nameId +"");
+		ResultSet r = this.con.query("SELECT argument_id,branch_id FROM DBNode WHERE id="+ nodeId +"");
 		r.next();
 		Json json = new Json();
 		json.setInt("argument_id",r.getInt("argument_id"));
@@ -723,7 +724,7 @@ class DriverMySQL extends DBDriver {
 		DBNode[] nodes = this.GetDBNodeList(argument_id,branch_id);
 		DBNode   root  = this.PrivateGetNode(nodes,goalId);
 		Branch branch = new Branch(nodes,root);
-		Argument argument = new Argument(branch_id,branch);
+		DCaseArgument argument = new DCaseArgument(branch_id,branch);
 		return argument;
 	}
 
@@ -766,7 +767,7 @@ class DriverMySQL extends DBDriver {
 	DCaseArgument CreateArgument() {
 		Branch branch = this.CreateBranch();
 		this.con.query("INSERT INTO Argument(master_branch_id) VALUES("+branch.branch_id+")");
-		DCaseArgument argument = new Argument(branch.branch_id, branch);
+		DCaseArgument argument = new DCaseArgument(branch.branch_id, branch);
 		argument.argument_id = this.con.getInsertId();
 		this.UpdateBranch(branch,argument.argument_id);
 		return argument;
