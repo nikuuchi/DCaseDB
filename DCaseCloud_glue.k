@@ -292,6 +292,23 @@ class Evidence extends DBNode {
 }
 
 //TODO
+class DScriptEvidence extends Evidence {
+	@Public Json toJson() {
+		Json json = this.PrivateToJson();
+		json.setString("type","DScriptEvidence");
+		return json;
+	}
+}
+
+class DScriptContext extends Context {
+	@Public Json toJson() {
+		Json json = this.PrivateToJson();
+		json.setString("type","DScriptContext");
+		return json;
+	}
+}
+
+//TODO
 class Justification extends DBNode {
 	Justification(){}
 
@@ -676,6 +693,10 @@ class DriverMySQL extends DBDriver {
 			return new Context(content);
 		} else if (NodeType == "Evidence") {
 			return new Evidence(content);
+		} else if (NodeType == "DScriptEvidence") {
+			return new DScriptEvidence(content);
+		} else if (NodeType == "DScriptContext") {
+			return new DScriptContext(content);
 		}
 		return null; //FIXME
 	}

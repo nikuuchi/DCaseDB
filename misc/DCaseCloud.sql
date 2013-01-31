@@ -67,7 +67,7 @@ CREATE  TABLE IF NOT EXISTS `dcasedb`.`NodeType` (
   `type_name` VARCHAR(45) NULL DEFAULT NULL ,
   PRIMARY KEY (`id`) )
 ENGINE = InnoDB
-AUTO_INCREMENT = 6
+AUTO_INCREMENT = 7
 DEFAULT CHARACTER SET = utf8;
 
 --
@@ -76,8 +76,10 @@ DEFAULT CHARACTER SET = utf8;
 INSERT INTO `NodeType` (`id`, `type_name`) VALUES
 (1, 'Goal'),
 (2, 'Strategy'),
+(3, 'DScriptContext'),
 (4, 'Context'),
 (5, 'Evidence');
+(6, 'DScriptEvidence'),
 
 
 -- -----------------------------------------------------
@@ -104,7 +106,7 @@ CREATE  TABLE IF NOT EXISTS `dcasedb`.`DBNode` (
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
-AUTO_INCREMENT = 60
+AUTO_INCREMENT = 1
 DEFAULT CHARACTER SET = utf8;
 
 
@@ -124,7 +126,7 @@ CREATE  TABLE IF NOT EXISTS `dcasedb`.`Context` (
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
-AUTO_INCREMENT = 10
+AUTO_INCREMENT = 1
 DEFAULT CHARACTER SET = utf8;
 
 
