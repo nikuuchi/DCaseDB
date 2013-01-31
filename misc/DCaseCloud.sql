@@ -161,7 +161,9 @@ CREATE  TABLE IF NOT EXISTS `dcasedb`.`ArgumentBranch` (
     REFERENCES `dcasedb`.`Argument` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8
+COLLATE = utf8_general_ci;
 
 
 

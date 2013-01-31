@@ -3,6 +3,7 @@ Import("Lib.Openssl");
 Import("Syntax.CStyleFor");
 Import("Syntax.CStyleWhile");
 Import("Syntax.Null");
+Import("Syntax.GlobalVariable");
 Import("Java.Class");
 Import("MiniKonoha.NameSpace");
 Import("MiniKonoha.Map");
@@ -11,15 +12,23 @@ Import("JavaStyle.Object");
 Import("JavaScript.Array");
 Import("JavaScript.Date");
 
+//TODO Array.splice()
+int[] ArrayInt_insert(int[] a,int index, int i) {
+	int[] a_end = a.slice(index);
+	int[] a_start = a.slice(0,index);
+	a_start.add(i);
+	return a_start.concat(a_end);
+}
+
 class DBNode {
 	int node_id;
 	String description;
-	int argument_id;
+//	int argument_id;
 	int branch_id;
 	boolean isEvidence;
 
 	DBNode parent;
-	Json lazy_parent;
+	Json lazy_parent; //FIXME
 	DBNode[] children;
 	Json lazy_children;
 
@@ -29,7 +38,8 @@ class DBNode {
 		this.isEvidence  = isEvidence;
 		this.children    = [];
 		this.lazy_children = new Json([]);
-		this.argument_id = -1;
+//		this.argument_id = -1;
+		this.branch_id = -1;
 	}
 
 	DBNode(int node_id, String description) {
@@ -38,7 +48,8 @@ class DBNode {
 		this.isEvidence  = false;
 		this.children    = [];
 		this.lazy_children = new Json([]);
-		this.argument_id = -1;
+//		this.argument_id = -1;
+		this.branch_id = -1;
 	}
 
 	DBNode(int node_id) {
@@ -47,11 +58,13 @@ class DBNode {
 		this.isEvidence  = false;
 		this.children    = [];
 		this.lazy_children = new Json([]);
-		this.argument_id = -1;
+		//this.argument_id = -1;
+		this.branch_id = -1;
 	}
 
 	DBNode(Json content) {
-		this.argument_id = -1;
+//		this.argument_id = -1;
+		this.branch_id = -1;
 		this.description = "";
 		this.isEvidence  = false;
 		this.children    = [];
@@ -187,7 +200,7 @@ class Goal extends DBNode {
 		//for(int i = 0; i < this.children.getSize();i = i + 1) {
 		int i = 0;
 		while(i < this.children.getSize()) {
-			if(this.children[i].toJson().getString("type") == "Context") { //FIXME instanceOf
+			if(this.children[i].toJson().getString("type") == "Context" || this.children[i].toJson().getString("type") == "DScriptContext" ) { //FIXME instanceOf
 				Context c = this.children[i] as Context;
 				context_array.add(c.GetContext());
 			}
@@ -213,7 +226,7 @@ class Goal extends DBNode {
 		//for(int i = 0; i < this.children.getSize();i = i + 1) {
 		int i = 0;
 		while(i < this.children.getSize()) {
-			if(this.children[i].toJson().getString("type") == "Context") { //FIXME instanceOf
+			if(this.children[i].toJson().getString("type") == "Context" || this.children[i].toJson().getString("type") == "DScriptContext" ) { //FIXME instanceOf
 				Context c = this.children[i] as Context;
 				return c.AddContext(context);
 			}
@@ -240,7 +253,7 @@ class Strategy extends DBNode {
 		//for(int i = 0; i < this.children.getSize();i = i + 1) {
 		int i = 0;
 		while(i < this.children.getSize()) {
-			if(this.children[i].toJson().getString("type") == "Context") { //FIXME instanceOf
+			if(this.children[i].toJson().getString("type") == "Context" || this.children[i].toJson().getString("type") == "DScriptContext" ) { //FIXME instanceOf
 				Context c = this.children[i] as Context;
 				context_array.add(c.GetContext());
 			}
@@ -266,7 +279,7 @@ class Strategy extends DBNode {
 		//for(int i = 0; i < this.children.getSize();i = i + 1) {
 		int i = 0;
 		while(i < this.children.getSize()) {
-			if(this.children[i].toJson().getString("type") == "Context") { //FIXME instanceOf
+			if(this.children[i].toJson().getString("type") == "Context" || this.children[i].toJson().getString("type") == "DScriptContext" ) { //FIXME instanceOf
 				Context c = this.children[i] as Context;
 				return c.AddContext(context);
 			}
@@ -386,18 +399,20 @@ class CommitLog {
 
 class Branch {
 	int branch_id;
-	int argument_id;
+	int[] argument_ids;
 	DBNode root;
 	DBNode[] nodes;
 
 	Branch() {
 		this.root = NULL;
 		this.nodes = [];
+		this.argument_ids = [];
 	}
 
 	Branch(DBNode[] nodes, DBNode root) {
 		this.nodes = nodes;
 		this.root = root;
+		this.argument_ids = [];
 	}
 
 	DBNode GetDBNode(int node_id) {
@@ -565,7 +580,7 @@ class DCaseArgument {
 
 	@Public Json toJson(int branch_id) {
 		Json json = this.GetBranch(branch_id).toJson();
-		CommitLog clog = this.commits.get(""+branch_id);//FIXME wrapper
+		CommitLog clog = this.commits.get(branch_id.toString());//FIXME wrapper
 		json.set("CommitLog",clog.toJson());
 		json.setString("HEAD",clog.head);
 		json.setString("argument_id",this.argument_id.toString());
@@ -622,7 +637,7 @@ class DBDriver {
 class DriverMySQL extends DBDriver {
 	Connection con;
 
-	DBDriver(String userName, String password) {
+	DriverMySQL(String userName, String password) {
 		this.con = new Connection("mysql://" + userName + ":" + password + "@localhost:3306");
 		this.con.query("USE dcasedb;");
 	}
@@ -816,8 +831,8 @@ class DriverMySQL extends DBDriver {
 	}
 
 	void UpdateBranch(Branch branch, int argument_id) {
-		this.con.query("UPDATE Branch SET Argument_id=" + argument_id + " WHERE id=" + branch.branch_id);
-		branch.argument_id = argument_id;
+		this.con.query("INSERT INTO ArgumentBranch(Argument_id,Branch_id) VALUES("+argument_id+","+branch.branch_id+")");
+		branch.argument_ids.add(argument_id); //FIXME
 	}
 
 	void SetRoot(int argument_id, int topGoalId) {
@@ -1052,11 +1067,13 @@ class API {
 		return this.db.RemoveNode(node);
 	}
 
-	@Public void DeleteLink(String argument_id, String parentId, String childId) {
-		this.DeleteLink(argument_id, "master", parentId, childId);
+	@Public void DeleteLink(int argument_id, int parent_id, int child_id) {
+		int master_id = this.GetArgument(argument_id).masterBranchId;
+		this.DeleteLink(argument_id, master_id, parent_id, child_id);
 	}
 
 	@Public void DeleteLink(String argument_id, String branch_id, String parentId, String childId) {
+		Branch branch = this.GetArgument(argument_id).GetBranch(branch_id);
 		//TODO
 	}
 
