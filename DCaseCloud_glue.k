@@ -1130,6 +1130,7 @@ class API {
 				da.GetBranch(branch_id).argument_ids.add(argument_id);
 				//FIXME
 			}
+			i = i + 1;
 		}
 	}
 
@@ -1145,11 +1146,18 @@ class API {
 
 	//node_id: Goal or Strategy
 	//FIXME: I want merge into AddContext future.
+	//FIXME: If the Goal has Context aloready, API::Fork();
 	@Public void CreateContext(int argument_id, int branch_id, int node_id, Json context) {
 		DBNode node = this.GetArgument(argument_id).GetBranch(branch_id).GetDBNode(node_id);
 		Context context = this.CreateDBNode(context) as Context;
 		this.InsertLink(branch_id);
 		this.newArgument(this.GetArgument(argument_id),branch_id,node);
+	}
+
+	//FIXME: Rename properly
+	//this Method make Branch and Return branch_id
+	@Public int Fork(){
+
 	}
 
 	@Public Json GetContext(DBNode node) {
