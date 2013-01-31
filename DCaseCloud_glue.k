@@ -13,32 +13,27 @@ Import("JavaScript.Array");
 Import("JavaScript.Date");
 
 //TODO Array.splice()
-int[] ArrayInt_insert(int[] a,int index, int i) {
+int[] ArrayInt_insert(int[] a,int index, int[] i) {
 	int[] a_end = a.slice(index);
 	int[] a_start = a.slice(0,index);
-	a_start.add(i);
-	return a_start.concat(a_end);
+	int[] aa = a_start.concat(i);
+	return aa.concat(a_end);
 }
 
 class DBNode {
 	int node_id;
 	String description;
-//	int argument_id;
 	int branch_id;
 	boolean isEvidence;
 
 	DBNode parent;
-	Json lazy_parent; //FIXME
 	DBNode[] children;
-	Json lazy_children;
 
 	DBNode(int node_id, String description, boolean isEvidence) {
 		this.node_id      = node_id;
 		this.description = description;
 		this.isEvidence  = isEvidence;
 		this.children    = [];
-		this.lazy_children = new Json([]);
-//		this.argument_id = -1;
 		this.branch_id = -1;
 	}
 
@@ -47,8 +42,6 @@ class DBNode {
 		this.description = description;
 		this.isEvidence  = false;
 		this.children    = [];
-		this.lazy_children = new Json([]);
-//		this.argument_id = -1;
 		this.branch_id = -1;
 	}
 
@@ -57,19 +50,15 @@ class DBNode {
 		this.description = "";
 		this.isEvidence  = false;
 		this.children    = [];
-		this.lazy_children = new Json([]);
-		//this.argument_id = -1;
 		this.branch_id = -1;
 	}
 
 	DBNode(Json content) {
-//		this.argument_id = -1;
 		this.branch_id = -1;
 		this.description = "";
 		this.isEvidence  = false;
 		this.children    = [];
 		this.PrivateUpdate(content);
-		this.lazy_children = new Json([]);
 	}
 
 	void AddChild(DBNode child) {
@@ -304,6 +293,15 @@ class Evidence extends DBNode {
 	}
 }
 
+//FIXME
+class ArgumentNode extends DBNode {
+	@Public Json toJson() {
+		Json json = this.PrivateToJson();
+		json.setString("type","ArgumentNode");
+		return json;
+	}
+}
+
 //TODO
 class DScriptEvidence extends Evidence {
 	@Public Json toJson() {
@@ -528,6 +526,7 @@ class Branch {
 
 class DCaseArgument {
 	int argument_id;
+	int parent_argument_id;
 	String name;
 	String description;
 	int masterBranchId;
@@ -572,6 +571,7 @@ class DCaseArgument {
 
 	@Public void SetRoot(int branch_id, Goal g) {
 		this.GetBranch(branch_id).root = g;
+		g.branch_id = branch_id;
 	}
 
 	@Public DBNode GetRoot() {
@@ -602,6 +602,8 @@ class DBDriver {
 
 	DCaseArgument GetArgument(int argument_id) {}
 
+	void AddParentArgument(DCaseArgument argument, int parent_argument_id) {}
+
 	DCaseArgument CreateArgument() {}
 
 	DCaseArgument CreateArgument(String description) {}
@@ -629,6 +631,8 @@ class DBDriver {
 
 	int GetArgumentIdByName(String name) {}
 
+	int GetArgumentIdByBranchId(int branch_id) {}
+
 	Json Search(String text) {}
 	Json Search(String text,String nodeType) {}
 	boolean RemoveNode(DBNode node) {}
@@ -655,7 +659,9 @@ class DriverMySQL extends DBDriver {
 
 	Json SearchContext(String text) {
 		Json json = new Json([]);
-		ResultSet r = this.con.query("SELECT DBNode.id as node_id,argument_id,branch_id,context_key,value FROM DBNode,Context WHERE DBNode.id=Context.node_id AND value LIKE '%"+text+"%'");
+		this.con.query("PREPARE stmt1 FROM 'SELECT DBNode.id as node_id,argument_id,branch_id,context_key,value FROM DBNode,Context WHERE DBNode.id=Context.node_id AND value LIKE ?'");
+		this.con.query("SET @a ='%"+text+"%'");
+		ResultSet r = this.con.query("EXECUTE stmt1 USING @a");
 		while(r.next()) {
 			Json j = new Json();
 			j.setString("node_id",r.getInt("node_id").toString());
@@ -803,6 +809,12 @@ class DriverMySQL extends DBDriver {
 		return argument;
 	}
 
+	int GetArgumentIdByBranchId(int branch_id) {
+		ResultSet r = this.con.query("SELECT Argument.id AS argument_id FROM Argument,ArgumentBranch WHERE Branch_id="+branch_id+" AND Argument_id!=parent_argument_id");
+		r.next();
+		return r.getInt("argument_id");
+	}
+
 	//FIXME
 	int GetArgumentIdByName(String name) {
 		ResultSet r = this.con.query("SELECT id FROM Argument WHERE description LIKE '%"+ name +"%'");
@@ -837,6 +849,11 @@ class DriverMySQL extends DBDriver {
 
 	void SetRoot(int argument_id, int topGoalId) {
 		this.con.query("UPDATE Argument SET goal_id="+topGoalId+" WHERE id="+argument_id);
+	}
+
+	void AddParentArgument(DCaseArgument argument, int parent_argument_id) {
+		this.con.query("UPDATE Argument SET parent_argument_id="+parent_argument_id+" WHERE id="+argument.argument_id);
+		argument.argument_id = parent_argument_id;
 	}
 
 	DCaseArgument CreateArgument() {
@@ -882,8 +899,8 @@ class DriverMySQL extends DBDriver {
 		return node;
 	}
 
-	void UpdateDBNode(DBNode node, int argument_id, int branch_id) {
-		this.con.query("UPDATE DBNode SET argument_id="+argument_id+", branch_id="+branch_id+" WHERE id="+node.node_id);
+	void UpdateDBNode(DBNode node, int branch_id) {
+		this.con.query("UPDATE DBNode SET branch_id="+branch_id+" WHERE id="+node.node_id);
 		node.argument_id = argument_id;
 		node.branch_id   = branch_id;
 	}
@@ -986,7 +1003,7 @@ class API {
 	}
 
 	@Public DCaseArgument GetArgument(int argument_id) {
-		String argId = ""+argument_id;
+		String argId = argument_id.toString();
 		if(this.arguments.has(argId)) {
 			return this.arguments.get(argId);
 		}else{
@@ -995,6 +1012,12 @@ class API {
 			return argument;
 		}
 	}
+
+	@Public DCaseArgument GetArgumentByBranchId(int branch_id) {
+		int argument_id = this.db.GetArgumentIdByBranchId(branch_id);
+		return this.GetArgument(argument_id);
+	}
+
 
 	@Public Json GetArgumentIds() {
 		return this.db.GetArgumentIdList();
@@ -1014,16 +1037,16 @@ class API {
 		this.InsertLink(id, masterId, parent, child);
 	}
 
-	@Public void InsertLink(int id, int branch_id, DBNode parent, DBNode child) {
-		Branch branch = this.GetArgument(id).GetBranch(branch_id);
+	@Public void InsertLink(int argument_id, int branch_id, DBNode parent, DBNode child) {
+		Branch branch = this.GetArgument(argument_id).GetBranch(branch_id);
 		if(branch.AddNode(parent)){
-			this.db.UpdateDBNode(parent,id,branch_id);
+			this.db.UpdateDBNode(parent,argument_id,branch_id);
 		}
 		if(branch.AddNode(child)){
-			this.db.UpdateDBNode(child,id,branch_id);
+			this.db.UpdateDBNode(child,argument_id,branch_id);
 		}
 		parent.addChild(child);
-		this.db.InsertLink(id,branch_id,parent.node_id,child.node_id);
+		this.db.InsertLink(argument_id,branch_id,parent.node_id,child.node_id);
 		//TODO Commit
 	}
 
@@ -1087,6 +1110,46 @@ class API {
 		int id = node.addContext(context);
 		//TODO Add new Context
 		this.db.AddContext(id,context);
+	}
+
+	@Public void AddContext(DBNode node, Json context) {
+		int id = node.addContext(context);
+		//TODO Add new Context
+		this.db.AddContext(id,context);
+	}
+
+	void AddArgumentId(int parent_argument_id, int parent_branch_id,int argument_id,DBNode node) {
+		int i = 0;
+		while(i<node.children.getSize()) {
+			if(node.children[i].branch_id == parent_branch_id){
+				node.children[i].branch_id = branch_id;
+				this.db.UpdateDBNode(node.children[i],branch_id);
+				this.AddArgumentId(parent_argument_id,parent_branch_id,argument_id,node.children[i]);
+			}else{
+				DCaseArgument da = this.GetArgumentByBranchId(branch_id);
+				da.GetBranch(branch_id).argument_ids.add(argument_id);
+				//FIXME
+			}
+		}
+	}
+
+	void newArgument(Argument parent_argument, int parent_branch_id,DBNode node) {
+		int[] args_id = parent_argument.GetBranch(parent_branch_id).argument_ids;
+		DCaseArgument argument = this.db.CreateArgument(node.description);
+		argument.GetBranch(argument.masterBranchId).argument_ids = ArrayInt_insert(argument.GetBranch(argument.masterBranchId).argument_ids,0,args_id);
+		this.db.AddParentArgument(argument,parent_argument.argument_id);
+		argument.SetRoot(node);
+		this.db.SetRoot(argument.argument_id,node.node_id);
+		this.AddArgumentId(parent_argument_id, argument.argument_id, argument.masterBranchId, node);
+	}
+
+	//node_id: Goal or Strategy
+	//FIXME: I want merge into AddContext future.
+	@Public void CreateContext(int argument_id, int branch_id, int node_id, Json context) {
+		DBNode node = this.GetArgument(argument_id).GetBranch(branch_id).GetDBNode(node_id);
+		Context context = this.CreateDBNode(context) as Context;
+		this.InsertLink(branch_id);
+		this.newArgument(this.GetArgument(argument_id),branch_id,node);
 	}
 
 	@Public Json GetContext(DBNode node) {

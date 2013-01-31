@@ -25,13 +25,6 @@ Evidence makeEvidence(API repo, String description, boolean flag) {
 	return repo.CreateDBNode(json) as Evidence;
 }
 
-Context makeContext(API repo, String description) {
-	Json json = new Json();
-	json.setString("description",description);
-	json.setString("type","Context");
-	return repo.CreateDBNode(json) as Context;
-}
-
 void GenerateTree1(API repo) {
 	DCaseArgument argument = repo.CreateArgument("診断スクリプトが正常に動作する");
 	int id = argument.argument_id;
