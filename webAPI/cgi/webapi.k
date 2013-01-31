@@ -19,24 +19,18 @@ Load("utils.k");
 API repo = new API("dcasedb", "dcasedb");
 
 class API_Method {
-	File file;
 	API_Method(){}
 	boolean paramCheck(Json j) {}
 	String run(Json j) {}
 
 	boolean lock() {
-		this.file = new FILE("./lock","a+");
-		return System.flock(this.file.getfileno(),LOCK_EX);
 	}
 
 	void write(Json j, String method) {
-		j.setString("method",method);
-		this.file.write(j.toString().toBytes());
-		this.file.write("\n".toBytes());
+		//j.setString("method",method);
 	}
 
 	void unlock() {
-		System.flock(this.file.getfileno(),LOCK_UN);
 	}
 }
 

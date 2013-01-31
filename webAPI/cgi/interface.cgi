@@ -16,10 +16,8 @@ void main() {
 	if (!method.paramCheck(j.get("params"))) {
 		// error handling
 	}
-	method.lock();
 	String result = method.run(j.get("params"));
 	flush(result);
-	method.unlock();
 }
 
 main();
