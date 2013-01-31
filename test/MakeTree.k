@@ -1,33 +1,33 @@
-Load("../dcasecloud_glue.k");
+Import("Deos.DCaseCloud");
 Import("JavaStyle.Object");
-//Import("konoha.object");
+Import("Type.Json");
 
-Strategy makeStrategy(API repo, int argumentId, String description) {
+Strategy makeStrategy(API repo, String description) {
 	Json json = new Json();
 	json.setString("description",description);
 	json.setString("type","Strategy");
-	return repo.CreateDBNode(argumentId,json) as Strategy;
+	return repo.CreateDBNode(json) as Strategy;
 }
 
-Goal makeGoal(API repo, int argumentId, String description) {
+Goal makeGoal(API repo, String description) {
 	Json json = new Json();
 	json.setString("description",description);
 	json.setString("type","Goal");
-	return repo.CreateDBNode(argumentId, json) as Goal;
+	return repo.CreateDBNode(json) as Goal;
 }
 
-Evidence makeEvidence(API repo, int argumentId, String description) {
+Evidence makeEvidence(API repo, String description) {
 	Json json = new Json();
 	json.setString("description",description);
 	json.setString("type","Evidence");
-	return repo.CreateDBNode(argumentId, json) as Evidence;
+	return repo.CreateDBNode(json) as Evidence;
 }
 
-Context makeContext(API repo, int argumentId, String description) {
+Context makeContext(API repo, String description) {
 	Json json = new Json();
 	json.setString("description",description);
 	json.setString("type","Context");
-	return repo.CreateDBNode(argumentId, json) as Context;
+	return repo.CreateDBNode(json) as Context;
 }
 
 void main() {
@@ -38,13 +38,13 @@ void main() {
 
 	DBNode root = repo.GetArgument(id).GetRoot();
 
-	Strategy s1 = makeStrategy(repo, id, "Separated by Syntax");
+	Strategy s1 = makeStrategy(repo, "Separated by Syntax");
 	repo.InsertLink(id, root, s1);
 
-	Goal g2_1 = makeGoal(repo, id, "Function Decralation");
+	Goal g2_1 = makeGoal(repo, "Function Decralation");
 	repo.InsertLink(id, s1 , g2_1);
 
-	Goal g2_2 = makeGoal(repo, id, "Return Statement");
+	Goal g2_2 = makeGoal(repo, "Return Statement");
 	repo.InsertLink(id, s1 , g2_2);
 
 	System.p(repo.GetArgument(id).toJson());

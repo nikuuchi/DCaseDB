@@ -1,5 +1,5 @@
-load("../dcasecloud_glue.k");
-
+Import("Deos.DCaseCloud");
+Import("Type.Json");
 
 void main() {
 

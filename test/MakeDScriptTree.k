@@ -2,32 +2,32 @@ Import("Deos.DCaseCloud");
 Import("JavaStyle.Object");
 Import("Type.Json");
 
-Strategy makeStrategy(API repo, int argumentId, String description) {
+Strategy makeStrategy(API repo, String description) {
 	Json json = new Json();
 	json.setString("description",description);
 	json.setString("type","Strategy");
-	return repo.CreateDBNode(argumentId,json) as Strategy;
+	return repo.CreateDBNode(json) as Strategy;
 }
 
-Goal makeGoal(API repo, int argumentId, String description) {
+Goal makeGoal(API repo, String description) {
 	Json json = new Json();
 	json.setString("description",description);
 	json.setString("type","Goal");
-	return repo.CreateDBNode(argumentId, json) as Goal;
+	return repo.CreateDBNode(json) as Goal;
 }
 
-Evidence makeEvidence(API repo, int argumentId, String description) {
+Evidence makeEvidence(API repo, String description) {
 	Json json = new Json();
 	json.setString("description",description);
 	json.setString("type","Evidence");
-	return repo.CreateDBNode(argumentId, json) as Evidence;
+	return repo.CreateDBNode(json) as Evidence;
 }
 
-Context makeContext(API repo, int argumentId, String description) {
+Context makeContext(API repo, String description) {
 	Json json = new Json();
 	json.setString("description",description);
 	json.setString("type","Context");
-	return repo.CreateDBNode(argumentId, json) as Context;
+	return repo.CreateDBNode(, json) as Context;
 }
 
 void GenerateTree1(API repo) {
@@ -41,28 +41,28 @@ void GenerateTree1(API repo) {
 	json.setString("PORT","1234");
 	repo.AddContext(id, root.node_id, json);
 
-	Strategy s1 = makeStrategy(repo, id, "各種スクリプトで議論する");
+	Strategy s1 = makeStrategy(repo, "各種スクリプトで議論する");
 	repo.InsertLink(id, root, s1);
 
-	Goal g2_1 = makeGoal(repo, id, "サービスに関わるスクリプトが正常に動作する");
+	Goal g2_1 = makeGoal(repo, "サービスに関わるスクリプトが正常に動作する");
 	repo.InsertLink(id, s1 , g2_1);
 
-	Goal g2_2 = makeGoal(repo, id, "障害対応に関わるスクリプトが正常に動作する");
+	Goal g2_2 = makeGoal(repo, "障害対応に関わるスクリプトが正常に動作する");
 	repo.InsertLink(id, s1 , g2_2);
 
-	Strategy s3 = makeStrategy(repo, id, "モニタリング／診断／対応のそれぞれについて議論する");
+	Strategy s3 = makeStrategy(repo, "モニタリング／診断／対応のそれぞれについて議論する");
 	repo.InsertLink(id, g2_2 , s3);
 
-	Goal g4_1 = makeGoal(repo, id, "モニタリングスクリプトが正常に動作する");
+	Goal g4_1 = makeGoal(repo, "モニタリングスクリプトが正常に動作する");
 	repo.InsertLink(id, s3, g4_1);
 
-	Goal g4_2 = makeGoal(repo, id, "診断スクリプトが正常に動作する");
+	Goal g4_2 = makeGoal(repo, "診断スクリプトが正常に動作する");
 	repo.InsertLink(id, s3, g4_2);
 
-	Goal g4_3 = makeGoal(repo, id, "対応スクリプトが正常に動作する");
+	Goal g4_3 = makeGoal(repo, "対応スクリプトが正常に動作する");
 	repo.InsertLink(id, s3, g4_3);
 
-	Evidence e5_1 = makeEvidence(repo, id, "D-Script:再起動が正常に動作する");
+	Evidence e5_1 = makeEvidence(repo, "D-Script:再起動が正常に動作する");
 	repo.InsertLink(id, g4_3, e5_1);
 
 	System.p(repo.GetArgument(id).toJson());
@@ -87,16 +87,16 @@ void GenerateTree2(API repo) {
 	json.setString("D-Script.Script","sudo shutdown -r now");
 	repo.AddContext(id, root.node_id, json);
 
-	Strategy s1 = makeStrategy(repo, id, "事前状態／事後状態で議論する");
+	Strategy s1 = makeStrategy(repo, "事前状態／事後状態で議論する");
 	repo.InsertLink(id, root, s1);
 
-	Goal g2_1 = makeGoal(repo, id, "事前にWebサーバが正常に動作している");
+	Goal g2_1 = makeGoal(repo, "事前にWebサーバが正常に動作している");
 	repo.InsertLink(id, s1, g2_1);
 
-	Goal g2_2 = makeGoal(repo, id, "事後にWebサーバが正常に動作している");
+	Goal g2_2 = makeGoal(repo, "事後にWebサーバが正常に動作している");
 	repo.InsertLink(id, s1, g2_2);
 
-	Evidence e3_1 = makeEvidence(repo, id, "D-Script:Webサーバが正常に動作している");
+	Evidence e3_1 = makeEvidence(repo, "D-Script:Webサーバが正常に動作している");
 	repo.InsertLink(id, g2_1, e3_1);
 	repo.InsertLink(id, g2_2, e3_1);
 
