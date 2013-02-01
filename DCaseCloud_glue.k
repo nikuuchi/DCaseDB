@@ -4,6 +4,7 @@ Import("Syntax.CStyleFor");
 Import("Syntax.CStyleWhile");
 Import("Syntax.Null");
 Import("Syntax.GlobalVariable");
+Import("Syntax.StringInterpolation");
 Import("Java.Class");
 Import("MiniKonoha.NameSpace");
 Import("MiniKonoha.Map");
@@ -24,6 +25,7 @@ class DBNode {
 	int node_id;
 	String description;
 	int branch_id;
+	int argument_id;
 	boolean isEvidence;
 
 	DBNode parent;
@@ -469,13 +471,13 @@ class Branch {
 		Json children = new Json([]);
 		//for(int i = 0; i < this.root.children.getSize(); i = i + 1) {
 		int i = 0;
-		int id = this.root.argument_id;
+		int id = this.root.branch_id;
 		while(i < this.root.children.getSize()) {
-			if(this.root.children[i].argument_id != id) {
+			if(this.root.children[i].branch_id != id) {
 				Json json = new Json();
 				json.setString("type","Argument");
 				//json.setString("description",); //FIXME
-				json.setString("argument_id",id.toString());
+				json.setString("branch_id",id.toString());
 				children.add(json);
 			}else {
 				children.add(this.PrivateArgumentTreeToJson(this.root.children[i]));
@@ -495,9 +497,9 @@ class Branch {
 			}
 			i = i + 1;
 		}
-		if(node.argument_id == -1) {
+		if(node.branch_id == -1) {
 			this.nodes.add(node);
-			node.argument_id = this.argument_id;
+			node.branch_id = this.branch_id;
 			return true;
 		}
 		return false;
@@ -593,52 +595,7 @@ class DCaseArgument {
 	}
 }
 
-class DBDriver {
-	DBDriver(){}
-
-	Json GetContext(int id) {}
-
-	Json SearchContext(String text) {}
-
-	DCaseArgument GetArgument(int argument_id) {}
-
-	void AddParentArgument(DCaseArgument argument, int parent_argument_id) {}
-
-	DCaseArgument CreateArgument() {}
-
-	DCaseArgument CreateArgument(String description) {}
-
-	void SetRoot(int argument_id, int topGoalId) {}
-
-	DBNode CreateDBNode(String nodeType, Json content) {}
-
-	//TODO
-	//void InsertCommit(String argument_name, String method, Commit c) {}
-
-	void InsertLink(int argument_id, int branch_id, int parentId, int childId) {}
-
-	void AddContext(int id, Json context) {}
-
-	void UpdateDBNode(DBNode node, int argument_id, int branch_id) {}
-
-	void UpdateDBNode(DBNode node, String description) {}
-
-	void UpdateDBNode(DBNode node, String description, boolean isEvidence) {}
-
-	void UpdateDBNode(DBNode node, boolean isEvidence) {}
-
-	Json GetArgumentIdList() {}
-
-	int GetArgumentIdByName(String name) {}
-
-	int GetArgumentIdByBranchId(int branch_id) {}
-
-	Json Search(String text) {}
-	Json Search(String text,String nodeType) {}
-	boolean RemoveNode(DBNode node) {}
-}
-
-class DriverMySQL extends DBDriver {
+class DriverMySQL {
 	Connection con;
 
 	DriverMySQL(String userName, String password) {
@@ -659,13 +616,14 @@ class DriverMySQL extends DBDriver {
 
 	Json SearchContext(String text) {
 		Json json = new Json([]);
-		this.con.query("PREPARE stmt1 FROM 'SELECT DBNode.id as node_id,argument_id,branch_id,context_key,value FROM DBNode,Context WHERE DBNode.id=Context.node_id AND value LIKE ?'");
+		this.con.query("PREPARE stmt1 FROM 'SELECT DBNode.id as node_id,branch_id,context_key,value FROM DBNode,Context WHERE DBNode.id=Context.node_id AND value LIKE ?'");
 		this.con.query("SET @a ='%"+text+"%'");
 		ResultSet r = this.con.query("EXECUTE stmt1 USING @a");
 		while(r.next()) {
 			Json j = new Json();
 			j.setString("node_id",r.getInt("node_id").toString());
-			j.setString("argument_id",r.getInt("argument_id").toString());
+			//j.setString("argument_id",r.getInt("argument_id").toString());
+			j.setString("argument_id",this.GetArgumentIdByBranchId(r.getInt("branch_id")).toString());
 			j.setString("branch_id",r.getInt("branch_id").toString());
 			j.setString("key",r.getString("context_key"));
 			j.setString("value",r.getString("value"));
@@ -677,11 +635,11 @@ class DriverMySQL extends DBDriver {
 	Json Search(String text, String nodeType) {
 		Json json = new Json([]);
 		//FIXME
-		ResultSet r = this.con.query("SELECT DBNode.id,argument_id,branch_id,type_name,description FROM DBNode,NodeType WHERE nodeType_id=NodeType.id AND type_name='"+nodeType+"' AND description LIKE '%"+text+"%'");
+		ResultSet r = this.con.query("SELECT DBNode.id,branch_id,type_name,description FROM DBNode,NodeType WHERE nodeType_id=NodeType.id AND type_name='"+nodeType+"' AND description LIKE '%"+text+"%'");
 		while(r.next()) {
 			Json j = new Json();
 			j.setString("node_id",r.getInt("id").toString());
-			j.setString("argument_id",r.getInt("argument_id").toString());
+			j.setString("argument_id",this.GetArgumentIdByBranchId(r.getInt("branch_id")).toString());
 			j.setString("branch_id",r.getInt("branch_id").toString());
 			j.setString("type",r.getString("type_name"));
 			j.setString("description",r.getString("description"));
@@ -692,11 +650,11 @@ class DriverMySQL extends DBDriver {
 
 	Json Search(String text) {
 		Json json = new Json([]);
-		ResultSet r = this.con.query("SELECT DBNode.id,argument_id,branch_id,type_name,description FROM DBNode,NodeType WHERE nodeType_id=NodeType.id AND description LIKE '%"+text+"%'");
+		ResultSet r = this.con.query("SELECT DBNode.id,branch_id,type_name,description FROM DBNode,NodeType WHERE nodeType_id=NodeType.id AND description LIKE '%"+text+"%'");
 		while(r.next()) {
 			Json j = new Json();
 			j.setString("node_id",r.getInt("id").toString());
-			j.setString("argument_id",r.getInt("argument_id").toString());
+			j.setString("argument_id",this.GetArgumentIdByBranchId(r.getInt("branch_id")).toString());
 			j.setString("branch_id",r.getInt("branch_id").toString());
 			j.setString("type",r.getString("node_type"));
 			j.setString("description",r.getString("description"));
@@ -733,37 +691,29 @@ class DriverMySQL extends DBDriver {
 		return null;
 	}
 
-	Json GetDBNodeById(int nodeId) {
-		ResultSet r = this.con.query("SELECT argument_id,branch_id FROM DBNode WHERE id="+ nodeId +"");
-		r.next();
-		Json json = new Json();
-		json.setInt("argument_id",r.getInt("argument_id"));
-		json.setInt("branch_id",r.getInt("branch_id"));
-		return json;
-	}
-
 	DBNode[] GetLinks(DBNode[] nodes) {
 		int i = 0;
 		while(i<nodes.getSize()) {
-			ResultSet r = this.con.query("SELECT parent_Node_id FROM NodeLink WHERE child_Node_id="+nodes[i].node_id+"");
+			ResultSet r = this.con.query("SELECT parent_Node_id FROM NodeLink WHERE child_Node_id=${nodes[i].node_id}");
 			while(r.next()){
 				int id = r.getInt("parent_Node_id");
 				nodes[i].parent = this.PrivateGetNode(nodes,id);
 				if(nodes[i].parent == null) {
-					Json json = this.GetDBNodeById(id);
-					nodes[i].lazy_parent = json;
+					//Json json = this.GetDBNodeById(id);
+					//nodes[i].lazy_parent = json;
+					//FIXME
 				}
 			}
 
-			ResultSet r1 = this.con.query("SELECT child_Node_id FROM NodeLink WHERE parent_Node_id="+nodes[i].node_id+"");
+			ResultSet r1 = this.con.query("SELECT child_Node_id FROM NodeLink WHERE parent_Node_id=${nodes[i].node_id}");
 			while(r1.next()){
 				int id = r1.getInt("child_Node_id");
 				DBNode node = this.PrivateGetNode(nodes,id);
 				if(node!=null) {
 					nodes[i].children.add(this.PrivateGetNode(nodes,id));
 				}else{
-					Json json = this.GetDBNodeById(id);
-					nodes[i].lazy_children.add(json);
+					//Json json = this.GetDBNodeById(id);
+					//nodes[i].lazy_children.add(json);
 				}
 			}
 			i = i + 1;
@@ -773,13 +723,13 @@ class DriverMySQL extends DBDriver {
 
 	DBNode[] GetDBNodeList(int argument_id, int branch_id) {
 		DBNode[] nodes = [];
-		ResultSet r = this.con.query("SELECT DBNode.id,description,evidence_flag,type_name FROM DBNode,NodeType WHERE argument_id="+argument_id+" AND branch_id="+ branch_id +" AND nodeType_id=NodeType.id;");
+		ResultSet r = this.con.query("SELECT DBNode.id,description,evidence_flag,type_name FROM DBNode,NodeType WHERE branch_id=${branch_id} AND nodeType_id=NodeType.id;");
 		while(r.next()) {
 			Json json = new Json();
 			json.setString("description",r.getString("description"));
 			String nodeType = r.getString("type_name");
 			json.setString("type",nodeType);
-			json.setBoolean("isEvidence", r.getBoolean("evidence_flag"));
+			//json.setBoolean("isEvidence", r.getBoolean("evidence_flag"));
 			DBNode node = this.MakeNode(nodeType,json);
 			node.node_id     = r.getInt("id");
 			node.argument_id = argument_id;
@@ -800,6 +750,7 @@ class DriverMySQL extends DBDriver {
 		ResultSet r = this.con.query("SELECT goal_id,master_branch_id FROM Argument WHERE id="+ argument_id +"");
 		r.next();
 		int goalId = r.getInt("goal_id");
+		System.p(goalId);
 		int master_branch_id = r.getInt("master_branch_id");
 
 		DBNode[] nodes = this.GetDBNodeList(argument_id,branch_id);
@@ -810,7 +761,7 @@ class DriverMySQL extends DBDriver {
 	}
 
 	int GetArgumentIdByBranchId(int branch_id) {
-		ResultSet r = this.con.query("SELECT Argument.id AS argument_id FROM Argument,ArgumentBranch WHERE Branch_id="+branch_id+" AND Argument_id!=parent_argument_id");
+		ResultSet r = this.con.query("SELECT Argument.id AS argument_id FROM Argument INNER JOIN ArgumentBranch ON Argument.id=ArgumentBranch.Argument_id WHERE Branch_id=${branch_id}"); //FIXME
 		r.next();
 		return r.getInt("argument_id");
 	}
@@ -832,6 +783,7 @@ class DriverMySQL extends DBDriver {
 		DBNode   root  = this.PrivateGetNode(nodes,goalId);
 		Branch branch = new Branch(nodes,root);
 		DCaseArgument argument = new DCaseArgument(branch_id,branch);
+		argument.argument_id = argument_id;
 		return argument;
 	}
 
@@ -843,16 +795,25 @@ class DriverMySQL extends DBDriver {
 	}
 
 	void UpdateBranch(Branch branch, int argument_id) {
-		this.con.query("INSERT INTO ArgumentBranch(Argument_id,Branch_id) VALUES("+argument_id+","+branch.branch_id+")");
+		this.con.query("INSERT INTO ArgumentBranch(Argument_id,Branch_id) VALUES(${argument_id},${branch.branch_id})");
 		branch.argument_ids.add(argument_id); //FIXME
 	}
 
-	void SetRoot(int argument_id, int topGoalId) {
-		this.con.query("UPDATE Argument SET goal_id="+topGoalId+" WHERE id="+argument_id);
+	void AddArgumentBranch(int[] argument_ids, int branch_id) {
+		int i = 0;
+		while(i < argument_ids.getSize()) {
+			this.con.query("INSERT INTO ArgumentBranch(Argument_id,Branch_id) VALUES("+argument_ids[i]+","+branch_id+")");
+			i = i + 1;
+		}
+	}
+
+	void SetRoot(int argument_id, int branch_id ,int topGoalId) {
+		this.con.query("UPDATE Argument SET goal_id=${topGoalId} WHERE id=${argument_id}");
+		this.con.query("UPDATE DBNode SET branch_id=${branch_id} WHERE id=${topGoalId}");
 	}
 
 	void AddParentArgument(DCaseArgument argument, int parent_argument_id) {
-		this.con.query("UPDATE Argument SET parent_argument_id="+parent_argument_id+" WHERE id="+argument.argument_id);
+		this.con.query("UPDATE Argument SET parent_argument_id=${parent_argument_id} WHERE id=${argument.argument_id}");
 		argument.argument_id = parent_argument_id;
 	}
 
@@ -889,19 +850,19 @@ class DriverMySQL extends DBDriver {
 		int typeId = this.GetNodeType(nodeType);
 
 		String description = content.getString("description");
-		boolean isEvidence = content.getBoolean("isEvidence");
-		String evidence = "FALSE";
-		if(isEvidence) {
-			evidence = "TRUE";
-		}
-		this.con.query("INSERT INTO DBNode(description,evidence_flag,nodeType_id) VALUES('"+ description + "'," + evidence + ","+typeId+") ");
+		//boolean isEvidence = content.getBoolean("isEvidence");
+		//String evidence = "FALSE";
+		//if(isEvidence) {
+		//	evidence = "TRUE";
+		//}
+		//this.con.query("INSERT INTO DBNode(description,evidence_flag,nodeType_id) VALUES('"+ description + "'," + evidence + ","+typeId+") ");
+		this.con.query("INSERT INTO DBNode(description,nodeType_id) VALUES('${description}',${typeId}) ");
 		node.node_id = this.con.getInsertId();
 		return node;
 	}
 
 	void UpdateDBNode(DBNode node, int branch_id) {
 		this.con.query("UPDATE DBNode SET branch_id="+branch_id+" WHERE id="+node.node_id);
-		node.argument_id = argument_id;
 		node.branch_id   = branch_id;
 	}
 
@@ -931,8 +892,8 @@ class DriverMySQL extends DBDriver {
 		return r.getInt("id");
 	}
 
-	void InsertLink(int argument_id, int branch_id, int parentId, int childId) {
-		this.con.query("INSERT INTO NodeLink(argument_id,parent_Node_id,child_Node_id,branch_id) VALUES("+argument_id+","+parentId+","+childId+","+branch_id+")");
+	void InsertLink(int branch_id, int parentId, int childId) {
+		this.con.query("INSERT INTO NodeLink(parent_Node_id,child_Node_id,branch_id) VALUES(${parentId},${childId},${branch_id})");
 	}
 
 	Json GetArgumentIdList() {
@@ -958,15 +919,19 @@ class DriverMySQL extends DBDriver {
 	}
 
 	boolean RemoveNode(DBNode node) {
-		this.con.query("DELETE FROM NodeLink WHERE parent_Node_id="+node.node_id+" OR child_Node_id="+node.node_id);
-		this.con.query("DELETE FROM DBNode WHERE id="+node.node_id);
+		this.con.query("DELETE FROM NodeLink WHERE parent_Node_id=${node.node_id} OR child_Node_id=${node.node_id}");
+		this.con.query("DELETE FROM DBNode WHERE id=${node.node_id}");
 		return true; //TODO
+	}
+
+	int Fork(int argument_id, int branch_id) {
+		this.con.query("SELECT ");
 	}
 }
 
 class API {
 	Map[DCaseArgument] arguments;
-	DBDriver db;
+	DriverMySQL db;
 
 	@Public API() {
 		arguments = new Map[DCaseArgument];
@@ -991,13 +956,13 @@ class API {
 
 		Goal g = this.CreateDBNode(content) as Goal;
 		argument.SetRoot(g);
-		this.db.SetRoot(argument.argument_id,g.node_id);
+		this.db.SetRoot(argument.argument_id,argument.masterBranchId,g.node_id);
 
 		Json context_json = new Json();
 		context_json.setString("type","Context");
 		Context c = this.CreateDBNode(context_json) as Context;
 		this.InsertLink(argument.argument_id, g, c);
-		this.db.UpdateDBNode(c,argument.argument_id,argument.masterBranchId);
+		this.db.UpdateDBNode(c,argument.masterBranchId);
 		argument.GetBranch(argument.masterBranchId).nodes.add(c);
 		return argument;
 	}
@@ -1040,13 +1005,13 @@ class API {
 	@Public void InsertLink(int argument_id, int branch_id, DBNode parent, DBNode child) {
 		Branch branch = this.GetArgument(argument_id).GetBranch(branch_id);
 		if(branch.AddNode(parent)){
-			this.db.UpdateDBNode(parent,argument_id,branch_id);
+			this.db.UpdateDBNode(parent,branch_id);
 		}
 		if(branch.AddNode(child)){
-			this.db.UpdateDBNode(child,argument_id,branch_id);
+			this.db.UpdateDBNode(child,branch_id);
 		}
 		parent.addChild(child);
-		this.db.InsertLink(argument_id,branch_id,parent.node_id,child.node_id);
+		this.db.InsertLink(branch_id,parent.node_id,child.node_id);
 		//TODO Commit
 	}
 
@@ -1134,19 +1099,20 @@ class API {
 		}
 	}
 
-	void newArgument(Argument parent_argument, int parent_branch_id,DBNode node) {
+	void newArgument(DCaseArgument parent_argument, int parent_branch_id,DBNode node) {
 		int[] args_id = parent_argument.GetBranch(parent_branch_id).argument_ids;
 		DCaseArgument argument = this.db.CreateArgument(node.description);
+		this.db.AddArgumentBranch(argument.masterBranchId,args_id);
 		argument.GetBranch(argument.masterBranchId).argument_ids = ArrayInt_insert(argument.GetBranch(argument.masterBranchId).argument_ids,0,args_id);
 		this.db.AddParentArgument(argument,parent_argument.argument_id);
 		argument.SetRoot(node);
-		this.db.SetRoot(argument.argument_id,node.node_id);
+		this.db.SetRoot(argument.argument_id,argument.masterBranchId,node.node_id);
 		this.AddArgumentId(parent_argument_id, argument.argument_id, argument.masterBranchId, node);
 	}
 
 	//node_id: Goal or Strategy
 	//FIXME: I want merge into AddContext future.
-	//FIXME: If the Goal has Context aloready, API::Fork();
+	//FIXME: If the Goal has Context already, API::Fork();
 	@Public void CreateContext(int argument_id, int branch_id, int node_id, Json context) {
 		DBNode node = this.GetArgument(argument_id).GetBranch(branch_id).GetDBNode(node_id);
 		Context context = this.CreateDBNode(context) as Context;
@@ -1155,9 +1121,22 @@ class API {
 	}
 
 	//FIXME: Rename properly
+	//FIXME: This Method will take long time.
 	//this Method make Branch and Return branch_id
-	@Public int Fork(){
-
+	@Public int Fork(int argument_id, int branch_id) {
+		/*
+		DCaseArgument argument = this.GetArgument(argument_id);
+		Branch branch = argument.GetBranch(branch_id);
+		Branch dstBranch = this.db.CreateBranch();
+		Json fromBranch = branch.toJson();
+		int i = 0;
+		Json nodes = fromBranch.get("nodes");
+		Json links = fromBranch.get("links");
+		while(i < nodes.getSize()) {
+			i = i + 1;
+		}
+		*/
+		return this.db.Fork(argument_id,branch_id);
 	}
 
 	@Public Json GetContext(DBNode node) {
