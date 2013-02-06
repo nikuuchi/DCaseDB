@@ -1,7 +1,5 @@
-INSERT INTO `NodeType` (`type_name`) VALUES
+INSERT INTO `node_type` (`type_name`) VALUES
 ('Goal'),
 ('Strategy'),
-('DScriptContext'),
 ('Context'),
-('Evidence'),
-('DScriptEvidence');
+('Evidence');
