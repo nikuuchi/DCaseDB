@@ -1,5 +1,6 @@
 ﻿# DCase DB
 ---
+*開発は現在workingブランチで行なっています*
 ##開発環境
 * Ubuntu 12.04(amd64)
 * minikonoha 0.3
