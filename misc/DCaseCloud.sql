@@ -33,6 +33,9 @@ ENGINE = InnoDB;
 CREATE  TABLE IF NOT EXISTS `dcasecloud`.`process_context` (
   `id` INT NOT NULL AUTO_INCREMENT ,
   `current_snapshot_id` INT NOT NULL ,
+  `process_type` VARCHAR(45) NULL ,
+  `justification` VARCHAR(255) NULL ,
+  `commiter` VARCHAR(45) NULL ,
   PRIMARY KEY (`id`) ,
   INDEX `fk_TimeLine_Snapshot1_idx` (`current_snapshot_id` ASC) ,
   CONSTRAINT `fk_TimeLine_Snapshot1`
