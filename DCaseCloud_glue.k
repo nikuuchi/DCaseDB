@@ -88,6 +88,7 @@ class API {
 	@Public API(String userName, String password) {
 		this.db = new DataBase(userName, password);
 	}
+
 	@Public int[] GetArgumentList() {
 		PreparedStatement q = this.db.newPreparedStatement("SELECT `id` FROM `argument`");
 		ResultSet r = q.execute();
@@ -98,11 +99,21 @@ class API {
 		return ret;
 	}
 
-/* //FIXME type DBNode
-
-	@Public DBNode GetNode(int NodeId) {
+	//Return Node
+	@Public Json GetNode(int node_id) {
+		PreparedStatement q = this.db.newPreparedStatement("SELECT node_identity_id, url, description, delete_flag,type_name FROM node_identity INNER JOIN node_data ON current_node_id=node_data.id INNER JOIN node_type ON node_type_id=node_type.id WHERE node_identity.id=?");
+		q.setInt("@a",node_id);
+		ResultSet r = q.execute();
+		r.next();
+		Json json = new Json();
+		json.setInt("node_id", r.getInt("node_identity_id"));
+		json.setString("url", r.getString("url"));
+		json.setString("description", r.getString("description"));
+		json.setBoolean("delete_flag", r.getBoolean("delete_flag"));
+		json.setString("type", r.getString("type_name"));
+		return json;
 	}
-*/
+
 	Json GetNodeList(int snapshot_id) {
 			PreparedStatement q = this.db.newPreparedStatement("SELECT node_identity_id, url, description, delete_flag,type_name FROM node_data INNER JOIN snapshot_has_node_data ON node_data_id=node_data.id  INNER JOIN node_type ON node_type_id=node_type.id WHERE snapshot_id=?");
 		q.setInt("@a", snapshot_id);
