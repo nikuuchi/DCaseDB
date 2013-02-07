@@ -88,15 +88,75 @@ class API {
 	@Public API(String userName, String password) {
 		this.db = new DataBase(userName, password);
 	}
+	@Public int[] GetArgumentList() {
+		PreparedStatement q = this.db.newPreparedStatement("SELECT `id` FROM `argument`");
+		ResultSet r = q.execute();
+		int[] ret = [];
+		while(r.next()) {
+			ret.add(r.getInt("id"));
+		}
+		return ret;
+	}
+
 /* //FIXME type DBNode
-	@Public DBNode GetRootArgument() {}
 
 	@Public DBNode GetNode(int NodeId) {
 	}
-
-	@Public DBNode[]  GetNodeTree(int NodeId) {
+*/
+	Json GetNodeList(int snapshot_id) {
+			PreparedStatement q = this.db.newPreparedStatement("SELECT node_identity_id, url, description, delete_flag,type_name FROM node_data INNER JOIN snapshot_has_node_data ON node_data_id=node_data.id  INNER JOIN node_type ON node_type_id=node_type.id WHERE snapshot_id=?");
+		q.setInt("@a", snapshot_id);
+		ResultSet r = q.execute();
+		Json json_array = new Json([]);
+		while(r.next()) {
+			Json json = new Json();
+			json.setInt("node_id", r.getInt("node_identity_id"));
+			json.setString("url", r.getString("url"));
+			json.setString("description", r.getString("description"));
+			json.setBoolean("delete_flag", r.getBoolean("delete_flag"));
+			json.setString("type", r.getString("type_name"));
+			json_array.add(json);
+		}
+		return json_array;
 	}
 
+	Json GetLinkList(int snapshot_id) {
+			PreparedStatement q = this.db.newPreparedStatement("SELECT parent_node_id,child_node_id FROM node_link_has_snapshot INNER JOIN node_link ON node_link_id=node_link.id WHERE snapshot_id=?");
+		q.setInt("@a", snapshot_id);
+		ResultSet r = q.execute();
+		Json json_array = new Json([]);
+		while(r.next()) {
+			Json json = new Json();
+			json.setInt("parent_node_id", r.getInt("parent_node_id"));
+			json.setInt("child_node_id", r.getInt("child_node_id"));
+			json_array.add(json);
+		}
+		return json_array;
+	}
+
+	int getTopGoalId(int snapshot_id) {
+		PreparedStatement p = this.db.newPreparedStatement("SELECT `root_node_id` FROM `snapshot` WHERE `id`=?");
+		p.setInt("@a", snapshot_id);
+		ResultSet r = p.execute();
+		r.next();
+		return r.getInt("root_node_id");
+	}
+
+	//Return NodeTree
+	@Public Json  GetNodeTree(int argument_id) {
+		int current_snapshot_id = this.getCurrentSnapShot(argument_id);
+		int top_goal_id = this.getTopGoalId(current_snapshot_id);
+		Json tree = new Json();
+		tree.setInt("argument_id",argument_id);
+		tree.setInt("snapshot_id",current_snapshot_id);
+		tree.setInt("top_goal_id",top_goal_id);
+		Json nodeList = this.GetNodeList(current_snapshot_id);
+		tree.set("nodes", nodeList);
+		Json linkList = this.GetLinkList(current_snapshot_id);
+		tree.set("links", linkList);
+		return tree;
+	}
+/*
 	//Return NodeId
 	@Public int GetNodeId(TopGoal ArgumentId) {
 	}
@@ -158,10 +218,11 @@ class API {
 		return r.getInt("id");
 	}
 
-	int createNodeData(int type_id, int node_id) {
-		PreparedStatement p = this.db.newPreparedStatement("INSERT INTO `node_data`(`node_type_id`,`node_identity_id`) VALUES(?,?)");
+	int createNodeData(int type_id, int node_id, String description) {
+		PreparedStatement p = this.db.newPreparedStatement("INSERT INTO `node_data`(`node_type_id`,`node_identity_id`,`description`) VALUES(?,?,?)");
 		p.setInt("@a", type_id);
 		p.setInt("@b", node_id);
+		p.setString("@c", description);
 		p.execute();
 		return p.getInsertId();
 	}
@@ -219,7 +280,7 @@ class API {
 		System.p(top_goal_id);
 		int node_type_id = this.getNodeType("Goal");
 		System.p(node_type_id);
-		int node_data_id = this.createNodeData(node_type_id,top_goal_id);
+		int node_data_id = this.createNodeData(node_type_id,top_goal_id,description);
 		System.p(node_data_id);
 		this.updateNodeIdentity(top_goal_id,node_data_id);
 		this.updateSnapshot(top_goal_id,snapshot_id); //FIXME
@@ -256,15 +317,26 @@ class API {
 	@Public int[] FindContextByProperty(String SearchText) {
 	}
 
+	int getCurrentSnapShot(int argument_id) {
+		PreparedStatement p = this.db.newPreparedStatement("SELECT current_snapshot_id FROM argument INNER JOIN process_context ON current_process_id=process_context.id WHERE argument.id=?");
+		p.setInt("@a", argument_id);
+		ResultSet r = p.execute();
+		r.next();
+		return r.getInt("current_snapshot_id");
+	}
+
 // ProcessContext
 	//return ProcessId
-	@Public int OpenProcessContext(int ArgumentId, int ProcessType, String CommiterName) {
+	@Public int OpenProcessContext(int argument_id, int process_type, String justification, String commiter_name) {
+		int current_snapshot_id = this.getCurrentSnapShot(argument_id);
+		return this.initProcessContext(current_snapshot_id, process_type, justification, commiter_name);
 	}
 
-	@Public int CloseProcessContext(int ArgumentId, int ProcessId, String Justification) {
+	@Public int CloseProcessContext(int argument_id, int process_id, String justification) {
+		//TODO
 	}
 
-	@Public int[] GetProcessContextIds(int ArgumentId) {
+	@Public int[] GetProcessContextIds(int argument_id) {
 	}
 
 //### D-Script
