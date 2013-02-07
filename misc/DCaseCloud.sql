@@ -68,6 +68,7 @@ ENGINE = InnoDB;
 CREATE  TABLE IF NOT EXISTS `dcasecloud`.`node_identity` (
   `id` INT NOT NULL AUTO_INCREMENT ,
   `argument_id` INT NOT NULL ,
+  `current_node_id` INT NULL ,
   PRIMARY KEY (`id`) ,
   INDEX `fk_node_identity_argument1_idx` (`argument_id` ASC) ,
   CONSTRAINT `fk_node_identity_argument1`
@@ -110,6 +111,7 @@ ENGINE = InnoDB;
 CREATE  TABLE IF NOT EXISTS `dcasecloud`.`link_identity` (
   `id` INT NOT NULL AUTO_INCREMENT ,
   `argument_id` INT NOT NULL ,
+  `current_node_link_id` INT NULL ,
   PRIMARY KEY (`id`) ,
   INDEX `fk_link_identity_argument1_idx` (`argument_id` ASC) ,
   CONSTRAINT `fk_link_identity_argument1`
@@ -229,6 +231,28 @@ CREATE  TABLE IF NOT EXISTS `dcasecloud`.`node_property` (
   CONSTRAINT `fk_node_property_node_data1`
     FOREIGN KEY (`node_data_id` )
     REFERENCES `dcasecloud`.`node_data` (`id` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `dcasecloud`.`argument_has_process_context`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `dcasecloud`.`argument_has_process_context` (
+  `argument_id` INT NOT NULL ,
+  `process_context_id` INT NOT NULL ,
+  PRIMARY KEY (`argument_id`, `process_context_id`) ,
+  INDEX `fk_argument_has_process_context_process_context1_idx` (`process_context_id` ASC) ,
+  INDEX `fk_argument_has_process_context_argument1_idx` (`argument_id` ASC) ,
+  CONSTRAINT `fk_argument_has_process_context_argument1`
+    FOREIGN KEY (`argument_id` )
+    REFERENCES `dcasecloud`.`argument` (`id` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_argument_has_process_context_process_context1`
+    FOREIGN KEY (`process_context_id` )
+    REFERENCES `dcasecloud`.`process_context` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
