@@ -38,7 +38,7 @@ class PreparedStatement {
 	}
 
 	void setString(String param, String value) {
-		this.con.query("SET ${param} = '${value}'");
+		this.con.query("SET ${param} = '${value}'"); //FIXME
 		this.queue.add(param);
 	}
 
@@ -136,6 +136,7 @@ class API {
 		ResultSet r = q.execute();
 		Json json_array = new Json([]);
 		while(r.next()) {
+			//FIXME
 			Json json = new Json();
 			json.setInt("parent_node_id", r.getInt("parent_node_id"));
 			json.setInt("child_node_id", r.getInt("child_node_id"));
@@ -281,17 +282,11 @@ class API {
 
 	@Public int CreateTopGoal(String description, int processType, String justification, String commiter) {
 		int snapshot_id = this.initSnapshot();
-		System.p(snapshot_id);
 		int process_id  = this.initProcessContext(snapshot_id,processType,justification,commiter);
-		System.p(process_id);
 		int argument_id = this.initArgument(process_id);
-		System.p(argument_id);
 		int top_goal_id = this.initTopGoal(argument_id);
-		System.p(top_goal_id);
 		int node_type_id = this.getNodeType("Goal");
-		System.p(node_type_id);
 		int node_data_id = this.createNodeData(node_type_id,top_goal_id,description);
-		System.p(node_data_id);
 		this.updateNodeIdentity(top_goal_id,node_data_id);
 		this.updateSnapshot(top_goal_id,snapshot_id); //FIXME
 		this.insertSnapshotNodeData(snapshot_id,argument_id);
