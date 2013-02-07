@@ -187,10 +187,10 @@ class API {
 	int InsertTimeLineId(int processContextId){
 	}
 
-	int initSnapshot() {
+	int initSnapshot(int prev_snapshot_id) {
 		String sql = "INSERT INTO `snapshot`(`prev_snapshot_id`,`unix_time`) VALUES(?,?)";
 		PreparedStatement q = this.db.newPreparedStatement(sql);
-		q.setInt("@a", 0);
+		q.setInt("@a", prev_snapshot_id);
 		q.setInt("@b", new Date().getTime());
 		q.execute();
 		return q.getInsertId();
@@ -214,7 +214,7 @@ class API {
 		return p.getInsertId();
 	}
 
-	int initTopGoal(int argument_id) {
+	int initNode_identity(int argument_id) {
 		PreparedStatement p = this.db.newPreparedStatement("INSERT INTO `node_identity`(`argument_id`) VALUES(?)");
 		p.setInt("@a", argument_id);
 		p.execute();
@@ -229,11 +229,12 @@ class API {
 		return r.getInt("id");
 	}
 
-	int createNodeData(int type_id, int node_id, String description) {
-		PreparedStatement p = this.db.newPreparedStatement("INSERT INTO `node_data`(`node_type_id`,`node_identity_id`,`description`) VALUES(?,?,?)");
+	int createNodeData(int type_id, int node_id, String description, String url) {
+		PreparedStatement p = this.db.newPreparedStatement("INSERT INTO `node_data`(`node_type_id`,`node_identity_id`,`description`, `url`) VALUES(?,?,?,?)");
 		p.setInt("@a", type_id);
 		p.setInt("@b", node_id);
 		p.setString("@c", description);
+		p.setString("@d", url);
 		p.execute();
 		return p.getInsertId();
 	}
@@ -281,12 +282,12 @@ class API {
 	}
 
 	@Public int CreateTopGoal(String description, int processType, String justification, String commiter) {
-		int snapshot_id = this.initSnapshot();
+		int snapshot_id = this.initSnapshot(0);
 		int process_id  = this.initProcessContext(snapshot_id,processType,justification,commiter);
 		int argument_id = this.initArgument(process_id);
-		int top_goal_id = this.initTopGoal(argument_id);
+		int top_goal_id = this.initNode_identity(argument_id);
 		int node_type_id = this.getNodeType("Goal");
-		int node_data_id = this.createNodeData(node_type_id,top_goal_id,description);
+		int node_data_id = this.createNodeData(node_type_id,top_goal_id,description,"");
 		this.updateNodeIdentity(top_goal_id,node_data_id);
 		this.updateSnapshot(top_goal_id,snapshot_id); //FIXME
 		this.insertSnapshotNodeData(snapshot_id,argument_id);
@@ -307,7 +308,28 @@ class API {
 	int GetNodeTypeId(String NodeType) {
 	}
 
-	@Public int CreateNode(String NodeType, String Description, int TimeLineId) {
+	@Public int CreateNode(int argument_id, Json json) {
+		int node_id = this.initNode_identity(argument_id);
+		int type_id = this.getNodeType(json.getString("type"));
+		int node_data_id = this.createNodeData(type_id,node_id,json.getString("description"),json.getString("url"));
+		this.updateNodeIdentity(node_id,node_data_id);
+		return node_id;
+	}
+
+	@Public void UpdateNode(int argument_id, Json json) {
+		int node_id = json.getString("node_id").toint;
+		int type_id = this.getNodeType(json.getString("type"));
+		int node_data_id = this.createNodeData(type_id,node_id,json.getString("description"),json.getString("url"));
+		this.updateNodeIdentity(node_id,node_data_id);
+	}
+
+	@Public void DeleteNode(int argument_id, Json json) {
+		/* //TODO
+		int node_id = json.getString("node_id").toint;
+		int type_id = this.getNodeType(json.getString("type"));
+		int node_data_id = this.createNodeData(type_id,node_id,json.getString("description"),json.getString("url"));
+		this.updateNodeIdentity(node_id,node_data_id);
+		*/
 	}
 
 	//Return Array[NodeId]
@@ -322,12 +344,41 @@ class API {
 	@Public int[] FindContextByProperty(String SearchText) {
 	}
 
+
+
 	int getCurrentSnapShot(int argument_id) {
 		PreparedStatement p = this.db.newPreparedStatement("SELECT current_snapshot_id FROM argument INNER JOIN process_context ON current_process_id=process_context.id WHERE argument.id=?");
 		p.setInt("@a", argument_id);
 		ResultSet r = p.execute();
 		r.next();
 		return r.getInt("current_snapshot_id");
+	}
+
+	@Public Json Commit(int argument_id, Json args) {
+		int prev_snapshot_id = this.getCurrentSnapShot(argument_id);
+		int snapshot_id = this.initSnapshot(prev_snapshot_id);
+		Json nodes = args.get("nodes");
+		Map[int] node_ids = new Map[int];
+		int i = 0;
+		while(i < nodes.getSize()) {
+			String method = nodes[i].getString("method");
+			if(method == "Create") { //FIXME
+				node_ids.set(nodes[i].getString("node_id"),this.CreateNode(argument_id,nodes[i]));
+			}else if(method == "Update") {
+				this.UpdateNode(argument_id,nodes[i]);
+			}else if(method == "Delete") {
+				this.DeleteNode(argument_id,nodes[i]);
+			}//TODO Error Handling
+			i = i + 1;
+		}
+		Json links = args.get("links");
+		i = 0;
+		while(i < links.getSize()) {
+			i = i + 1;
+		}
+
+		this.insertSnapshotNodeData(snapshot_id,argument_id);
+		this.insertSnapshotNodeLink(snapshot_id,argument_id);
 	}
 
 // ProcessContext
