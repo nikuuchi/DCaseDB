@@ -99,12 +99,7 @@ class API {
 		return ret;
 	}
 
-	//Return Node
-	@Public Json GetNode(int node_id) {
-		PreparedStatement q = this.db.newPreparedStatement("SELECT node_identity_id, url, description, delete_flag,type_name FROM node_identity INNER JOIN node_data ON current_node_id=node_data.id INNER JOIN node_type ON node_type_id=node_type.id WHERE node_identity.id=?");
-		q.setInt("@a",node_id);
-		ResultSet r = q.execute();
-		r.next();
+	Json CreateJsonNode(ResultSet r) {
 		Json json = new Json();
 		json.setInt("node_id", r.getInt("node_identity_id"));
 		json.setString("url", r.getString("url"));
@@ -114,18 +109,22 @@ class API {
 		return json;
 	}
 
+	//Return Node
+	@Public Json GetNode(int node_id) {
+		PreparedStatement q = this.db.newPreparedStatement("SELECT node_identity_id, url, description, delete_flag,type_name FROM node_identity INNER JOIN node_data ON current_node_id=node_data.id INNER JOIN node_type ON node_type_id=node_type.id WHERE node_identity.id=?");
+		q.setInt("@a",node_id);
+		ResultSet r = q.execute();
+		r.next();
+		return this.CreateJsonNode(r);
+	}
+
 	Json GetNodeList(int snapshot_id) {
 			PreparedStatement q = this.db.newPreparedStatement("SELECT node_identity_id, url, description, delete_flag,type_name FROM node_data INNER JOIN snapshot_has_node_data ON node_data_id=node_data.id  INNER JOIN node_type ON node_type_id=node_type.id WHERE snapshot_id=?");
 		q.setInt("@a", snapshot_id);
 		ResultSet r = q.execute();
 		Json json_array = new Json([]);
 		while(r.next()) {
-			Json json = new Json();
-			json.setInt("node_id", r.getInt("node_identity_id"));
-			json.setString("url", r.getString("url"));
-			json.setString("description", r.getString("description"));
-			json.setBoolean("delete_flag", r.getBoolean("delete_flag"));
-			json.setString("type", r.getString("type_name"));
+			Json json = this.CreateJsonNode(r);
 			json_array.add(json);
 		}
 		return json_array;
