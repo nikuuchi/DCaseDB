@@ -344,7 +344,30 @@ class API {
 	@Public int[] FindContextByProperty(String SearchText) {
 	}
 
+	void CreateLink(int argument_id, Map[int] node_ids, Json json) {
+		int parent_id;
+		int child_id;
+		if(json.hasKey("parent")) {
+			parent_id = json.getInt("parent_node_id");
+		} else {
+			parent_id = node_ids.get(json.getString("parent_node_id"));
+		}
+		if(json.hasKey("child")) {
+			child_id = json.getInt("child_node_id");
+		} else {
+			child_id = node_ids.get(json.getString("child_node_id"));
+		}
+		PreparedStatement p = this.db.newPreparedStatement("INSERT INTO `link_identity`(`argument_id`) VALUES(?)");
+		p.setInt("@a",argument_id);
+		p.execute();
+		int link_id = p.getInsertId();
 
+		PreparedStatement p_node_link = this.db.newPreparedStatement("INSERT INTO `node_link`(`parent_node_id`,`child_node_id`,`link_identity_id`) VALUES(?,?,?)");
+		p.setInt("@a",parent_id);
+		p.setInt("@b",child_id);
+		p.setInt("@c",link_id);
+		p.execute();
+	}
 
 	int getCurrentSnapShot(int argument_id) {
 		PreparedStatement p = this.db.newPreparedStatement("SELECT current_snapshot_id FROM argument INNER JOIN process_context ON current_process_id=process_context.id WHERE argument.id=?");
@@ -374,6 +397,12 @@ class API {
 		Json links = args.get("links");
 		i = 0;
 		while(i < links.getSize()) {
+			String method = links[i].getString("method");
+			if(method == "Create") { //FIXME
+				this.CreateLink(argument_id,node_ids,links[i]);
+			}else if(method == "Delete") {
+				//FIXME
+			}
 			i = i + 1;
 		}
 

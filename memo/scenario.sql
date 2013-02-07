@@ -40,6 +40,7 @@ INSERT INTO `node_data`(`node_type_id`,`node_identity_id`,`description`,`url`) V
 --INSERT INTO `snapshot_has_node_data` (`snapshot_id`,`node_data_id`) VALUES(?,?);
 
 ----while(nodes[i].property.getSize()){
+--TODO
 INSERT INTO `node_property`(`property_key`,`property_value`,`node_data_id`) VALUES(?,?,?);
 ----}
 --}
@@ -65,10 +66,10 @@ UPDATE `node_identity` SET current_node_id=? WHERE `id`=?;
 -- *最後にsnapshotを貼る
 -- ->node_identityにcurrentを持たせて、変更した後これにsnapshotを貼る。
 INSERT INTO `snapshot_has_node_data`(snapshot_id,node_data_id)
-	SELECT ? AS snapshot_id,current_node_id FROM node_identity WHERE argument_id=?; 
+	SELECT ? AS snapshot_id,current_node_id FROM node_identity WHERE argument_id=?;
 
 INSERT INTO `node_link_has_snapshot`(node_link_id,snapshot_id)
-	SELECT ? AS snapshot_id,current_node_link_id FROM link_identity WHERE argument_id=?; 
+	SELECT ? AS snapshot_id,current_node_link_id FROM link_identity WHERE argument_id=?;
 
 -- Get
 -- * Argumentの一覧
@@ -87,5 +88,3 @@ SELECT node_identity_id, url, description, delete_flag, type_name
 SELECT parent_node_id,child_node_id FROM node_link_has_snapshot
 	INNER JOIN node_link ON node_link_id=node_link.id
 	WHERE snapshot_id=?;
--- * 
--- * 
