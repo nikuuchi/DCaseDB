@@ -1,6 +1,6 @@
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
-SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL,ALLOW_INVALID_DATES';
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL';
 
 CREATE SCHEMA IF NOT EXISTS `dcasecloud` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci ;
 USE `dcasecloud` ;
@@ -16,33 +16,15 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `dcasecloud`.`snapshot`
--- -----------------------------------------------------
-CREATE  TABLE IF NOT EXISTS `dcasecloud`.`snapshot` (
-  `id` INT NOT NULL AUTO_INCREMENT ,
-  `prev_snapshot_id` INT NULL ,
-  `unix_time` INT NULL ,
-  `root_node_id` INT NULL ,
-  PRIMARY KEY (`id`) )
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
 -- Table `dcasecloud`.`process_context`
 -- -----------------------------------------------------
 CREATE  TABLE IF NOT EXISTS `dcasecloud`.`process_context` (
   `id` INT NOT NULL AUTO_INCREMENT ,
-  `current_snapshot_id` INT NOT NULL ,
+  `current_snapshot_id` INT NULL ,
   `process_type` VARCHAR(45) NULL ,
   `justification` VARCHAR(255) NULL ,
   `commiter` VARCHAR(45) NULL ,
-  PRIMARY KEY (`id`) ,
-  INDEX `fk_TimeLine_Snapshot1_idx` (`current_snapshot_id` ASC) ,
-  CONSTRAINT `fk_TimeLine_Snapshot1`
-    FOREIGN KEY (`current_snapshot_id` )
-    REFERENCES `dcasecloud`.`snapshot` (`id` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+  PRIMARY KEY (`id`) )
 ENGINE = InnoDB;
 
 
@@ -128,27 +110,39 @@ ENGINE = InnoDB;
 CREATE  TABLE IF NOT EXISTS `dcasecloud`.`node_link` (
   `id` INT NOT NULL AUTO_INCREMENT ,
   `parent_node_id` INT NOT NULL ,
-  `child_node_id` INT NOT NULL ,
+  `child_node_id` INT NOT NULL DEFAULT 0 ,
   `link_identity_id` INT NOT NULL ,
   PRIMARY KEY (`id`) ,
-  INDEX `fk_NodeLink_NodeData_idx` (`parent_node_id` ASC) ,
-  INDEX `fk_NodeLink_NodeData1_idx` (`child_node_id` ASC) ,
   INDEX `fk_NodeLink_Link1_idx` (`link_identity_id` ASC) ,
-  CONSTRAINT `fk_NodeLink_NodeData`
-    FOREIGN KEY (`parent_node_id` )
-    REFERENCES `dcasecloud`.`node_data` (`id` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_NodeLink_NodeData1`
-    FOREIGN KEY (`child_node_id` )
-    REFERENCES `dcasecloud`.`node_data` (`id` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+  INDEX `fk_node_link_node_identity1` (`parent_node_id` ASC) ,
+  INDEX `fk_node_link_node_identity2` (`child_node_id` ASC) ,
   CONSTRAINT `fk_NodeLink_Link1`
     FOREIGN KEY (`link_identity_id` )
     REFERENCES `dcasecloud`.`link_identity` (`id` )
     ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_node_link_node_identity1`
+    FOREIGN KEY (`parent_node_id` )
+    REFERENCES `dcasecloud`.`node_identity` (`id` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_node_link_node_identity2`
+    FOREIGN KEY (`child_node_id` )
+    REFERENCES `dcasecloud`.`node_identity` (`id` )
+    ON DELETE NO ACTION
     ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `dcasecloud`.`snapshot`
+-- -----------------------------------------------------
+CREATE  TABLE IF NOT EXISTS `dcasecloud`.`snapshot` (
+  `id` INT NOT NULL AUTO_INCREMENT ,
+  `prev_snapshot_id` INT NULL ,
+  `unix_time` BIGINT NULL ,
+  `root_node_id` INT NULL ,
+  PRIMARY KEY (`id`) )
 ENGINE = InnoDB;
 
 

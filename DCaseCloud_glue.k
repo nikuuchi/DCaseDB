@@ -125,6 +125,7 @@ class API {
 		Json json_array = new Json([]);
 		while(r.next()) {
 			Json json = this.CreateJsonNode(r);
+			System.p(json);
 			json_array.add(json);
 		}
 		return json_array;
@@ -156,6 +157,8 @@ class API {
 	//Return NodeTree
 	@Public Json  GetNodeTree(int argument_id) {
 		int current_snapshot_id = this.getCurrentSnapShot(argument_id);
+		System.p(argument_id);
+		System.p(current_snapshot_id);
 		int top_goal_id = this.getTopGoalId(current_snapshot_id);
 		Json tree = new Json();
 		tree.setInt("argument_id",argument_id);
@@ -167,11 +170,12 @@ class API {
 		tree.set("links", linkList);
 		return tree;
 	}
-/*
-	//Return NodeId
-	@Public int GetNodeId(TopGoal ArgumentId) {
-	}
 
+	//Return NodeId
+//	@Public int GetNodeId(TopGoal ArgumentId) {
+//	}
+
+/*
 	@Public GetNodeTree(int NodeId, int timeStart, int timeEnd) {
 	}
 */
@@ -184,14 +188,12 @@ class API {
 	@Public int Add(int ParentNodeId, Json /*DBNode*/ ChildNodeTree) {
 	}
 
-	int InsertTimeLineId(int processContextId){
-	}
-
-	int initSnapshot(int prev_snapshot_id) {
-		String sql = "INSERT INTO `snapshot`(`prev_snapshot_id`,`unix_time`) VALUES(?,?)";
+	int initSnapshot(int prev_snapshot_id, int root_node_id) {
+		String sql = "INSERT INTO `snapshot`(`prev_snapshot_id`,`unix_time`, `root_node_id`) VALUES(?,?,?)";
 		PreparedStatement q = this.db.newPreparedStatement(sql);
 		q.setInt("@a", prev_snapshot_id);
 		q.setInt("@b", new Date().getTime());
+		q.setInt("@c", root_node_id);
 		q.execute();
 		return q.getInsertId();
 	}
@@ -246,6 +248,13 @@ class API {
 		p.execute();
 	}
 
+	void updateProcessContext(int process_id, int current_snapshot_id) {
+		PreparedStatement p = this.db.newPreparedStatement("UPDATE process_context SET current_snapshot_id=? WHERE id=?");
+		p.setInt("@a", current_snapshot_id);
+		p.setInt("@b", process_id);
+		p.execute();
+	}
+
 	void updateNodeIdentity(int node_identity_id, int node_data_id) {
 		PreparedStatement p = this.db.newPreparedStatement("UPDATE `node_identity` SET `current_node_id`=? WHERE `id`=?");
 		p.setInt("@a", node_data_id);
@@ -261,7 +270,7 @@ class API {
 	}
 
 	void insertSnapshotNodeLink(int snapshot_id, int argument_id) {
-		PreparedStatement p = this.db.newPreparedStatement("INSERT INTO `node_link_has_snapshot`(node_link_id,snapshot_id) SELECT ? AS snapshot_id,current_node_link_id FROM link_identity WHERE argument_id=?");
+		PreparedStatement p = this.db.newPreparedStatement("INSERT INTO `node_link_has_snapshot`(node_link_id,snapshot_id) SELECT current_node_link_id,? AS snapshot_id FROM link_identity WHERE argument_id=?");
 		p.setInt("@a", snapshot_id);
 		p.setInt("@b", argument_id);
 		p.execute();
@@ -282,7 +291,7 @@ class API {
 	}
 
 	@Public int CreateTopGoal(String description, int processType, String justification, String commiter) {
-		int snapshot_id = this.initSnapshot(0);
+		int snapshot_id = this.initSnapshot(0,0);
 		int process_id  = this.initProcessContext(snapshot_id,processType,justification,commiter);
 		int argument_id = this.initArgument(process_id);
 		int top_goal_id = this.initNode_identity(argument_id);
@@ -344,18 +353,25 @@ class API {
 	@Public int[] FindContextByProperty(String SearchText) {
 	}
 
+	void updatelinkIdentity(int identity_id,int link_id){
+		PreparedStatement p = this.db.newPreparedStatement("UPDATE `link_identity` SET current_node_link_id=? WHERE `id`=?");
+		p.setInt("@a",link_id);
+		p.setInt("@b",identity_id);
+		p.execute();
+	}
+
 	void CreateLink(int argument_id, Map[int] node_ids, Json json) {
 		int parent_id;
 		int child_id;
 		if(json.hasKey("parent")) {
-			parent_id = json.getInt("parent_node_id");
-		} else {
 			parent_id = node_ids.get(json.getString("parent_node_id"));
+		} else {
+			parent_id = json.getInt("parent_node_id");
 		}
 		if(json.hasKey("child")) {
-			child_id = json.getInt("child_node_id");
-		} else {
 			child_id = node_ids.get(json.getString("child_node_id"));
+		} else {
+			child_id = json.getInt("child_node_id");
 		}
 		PreparedStatement p = this.db.newPreparedStatement("INSERT INTO `link_identity`(`argument_id`) VALUES(?)");
 		p.setInt("@a",argument_id);
@@ -363,10 +379,12 @@ class API {
 		int link_id = p.getInsertId();
 
 		PreparedStatement p_node_link = this.db.newPreparedStatement("INSERT INTO `node_link`(`parent_node_id`,`child_node_id`,`link_identity_id`) VALUES(?,?,?)");
-		p.setInt("@a",parent_id);
-		p.setInt("@b",child_id);
-		p.setInt("@c",link_id);
-		p.execute();
+		p_node_link.setInt("@a",parent_id);
+		p_node_link.setInt("@b",child_id);
+		p_node_link.setInt("@c",link_id);
+		p_node_link.execute();
+		int l_id = p_node_link.getInsertId();
+		this.updatelinkIdentity(link_id,l_id);
 	}
 
 	int getCurrentSnapShot(int argument_id) {
@@ -377,13 +395,28 @@ class API {
 		return r.getInt("current_snapshot_id");
 	}
 
+	int getCurrentProcessContext(int argument_id) {
+		PreparedStatement p = this.db.newPreparedStatement("SELECT current_process_id FROM argument WHERE id=?");
+		p.setInt("@a", argument_id);
+		ResultSet r = p.execute();
+		r.next();
+		return r.getInt("current_process_id");
+	}
+
 	@Public Json Commit(int argument_id, Json args) {
 		int prev_snapshot_id = this.getCurrentSnapShot(argument_id);
-		int snapshot_id = this.initSnapshot(prev_snapshot_id);
+		int process_id  = this.getCurrentProcessContext(argument_id);
+		int top_goal_id = this.getTopGoalId(prev_snapshot_id);
+		int snapshot_id = this.initSnapshot(prev_snapshot_id,top_goal_id); //FIXME
+		System.p(prev_snapshot_id);
+		this.updateProcessContext(process_id,snapshot_id);
+
 		Json nodes = args.get("nodes");
 		Map[int] node_ids = new Map[int];
 		int i = 0;
+		System.p(nodes);
 		while(i < nodes.getSize()) {
+			System.p("hoge");
 			String method = nodes[i].getString("method");
 			if(method == "Create") { //FIXME
 				node_ids.set(nodes[i].getString("node_id"),this.CreateNode(argument_id,nodes[i]));
@@ -394,6 +427,7 @@ class API {
 			}//TODO Error Handling
 			i = i + 1;
 		}
+
 		Json links = args.get("links");
 		i = 0;
 		while(i < links.getSize()) {
