@@ -2,7 +2,7 @@
 ---
 ##開発環境
 * Ubuntu 12.04(amd64)
-* minikonoha 0.3
+* konoha3
 
 ##必要なライブラリ
 * MySQL
