@@ -82,10 +82,10 @@ class DataBase {
 
 }
 
-class API {
+class DCaseModel {
 	DataBase db;
 
-	@Public API(String userName, String password) {
+	@Public DCaseModel(String userName, String password) {
 		this.db = new DataBase(userName, password);
 	}
 

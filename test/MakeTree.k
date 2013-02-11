@@ -3,11 +3,11 @@ Import("Type.Json");
 Import("JavaScript.Array");
 
 void main() {
-	API api = new API("dcasedb","dcasedb");
-	int id = api.CreateTopGoal("description test",1,"this is the test justification","foo commiter");
-	Json nodeTree = api.GetNodeTree(id);
+	DCaseModel model = new DCaseModel("dcasedb","dcasedb");
+	int id = model.CreateTopGoal("description test",1,"this is the test justification","foo commiter");
+	Json nodeTree = model.GetNodeTree(id);
 	int top_id = nodeTree.getInt("top_goal_id");
-	System.p(api.GetNode(top_id));
+	System.p(model.GetNode(top_id));
 
 	Json tree = new Json();
 	Json nodes = new Json([]);
@@ -29,8 +29,10 @@ void main() {
 	l.setString("child_node_id","hoge1");
 	links.add(l);
 
-	api.Commit(id,tree);
-	System.p(api.GetNodeTree(id));
+	System.p(tree);
+
+	model.Commit(id,tree);
+	System.p(model.GetNodeTree(id));
 
 }
 
