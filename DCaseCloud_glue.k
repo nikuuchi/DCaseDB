@@ -125,7 +125,6 @@ class DCaseModel {
 		Json json_array = new Json([]);
 		while(r.next()) {
 			Json json = this.CreateJsonNode(r);
-			System.p(json);
 			json_array.add(json);
 		}
 		return json_array;
@@ -157,8 +156,6 @@ class DCaseModel {
 	//Return NodeTree
 	@Public Json  GetNodeTree(int argument_id) {
 		int current_snapshot_id = this.getCurrentSnapShot(argument_id);
-		System.p(argument_id);
-		System.p(current_snapshot_id);
 		int top_goal_id = this.getTopGoalId(current_snapshot_id);
 		Json tree = new Json();
 		tree.setInt("argument_id",argument_id);
