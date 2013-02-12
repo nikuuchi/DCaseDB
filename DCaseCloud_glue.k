@@ -153,29 +153,64 @@ class DCaseModel {
 		return r.getInt("root_node_id");
 	}
 
+	Json _GetNodeTree(int argument_id, int top_goal_id, int snapshot_id) {
+		Json tree = new Json();
+		tree.setInt("argument_id",argument_id);
+		tree.setInt("snapshot_id",snapshot_id);
+		tree.setInt("top_goal_id",top_goal_id);
+		Json nodeList = this.GetNodeList(snapshot_id);
+		tree.set("nodes", nodeList);
+		Json linkList = this.GetLinkList(snapshot_id);
+		tree.set("links", linkList);
+		return tree;
+	}
+
 	//Return NodeTree
 	@Public Json  GetNodeTree(int argument_id) {
 		int current_snapshot_id = this.getCurrentSnapShot(argument_id);
 		int top_goal_id = this.getTopGoalId(current_snapshot_id);
-		Json tree = new Json();
-		tree.setInt("argument_id",argument_id);
-		tree.setInt("snapshot_id",current_snapshot_id);
-		tree.setInt("top_goal_id",top_goal_id);
-		Json nodeList = this.GetNodeList(current_snapshot_id);
-		tree.set("nodes", nodeList);
-		Json linkList = this.GetLinkList(current_snapshot_id);
-		tree.set("links", linkList);
-		return tree;
+		return this._GetNodeTree(argument_id,top_goal_id,current_snapshot_id);
 	}
 
 	//Return NodeId
 //	@Public int GetNodeId(TopGoal ArgumentId) {
 //	}
 
-/*
-	@Public GetNodeTree(int NodeId, int timeStart, int timeEnd) {
+	int[] _GetSnapshotList(int start_id, int end_id) {
+		int[] ret = [];
+		ret.add(end_id);
+		int it = end_id;
+		while(it !=start_id) {
+			PreparedStatement p = this.db.newPreparedStatement("SELECT `prev_snapshot_id` FROM `snapshot` WHERE `id`=?");
+			p.setInt("@a", it);
+			ResultSet r = p.execute();
+			r.next();
+			it = r.getInt("prev_snapshot_id");
+			if(it == 0) {
+				break;
+			}
+			ret.add(it);
+		}
+		int[] reverse = [];
+		int i = ret.getSize()-1;
+		while(i>0) {
+			reverse.add(ret[i]);
+			i = i - 1;
+		}
+		return reverse;
 	}
-*/
+
+	@Public Json GetNodeTree(int argument_id, int snapshot_start_id, int snapshot_end_id) {
+		Json array_json = new Json([]);
+		int i = 0;
+		int[] ids = this._GetSnapshotList(snapshot_start_id,snapshot_end_id);//TODO get snapshot_id[]
+		while(i < ids.getSize()) {
+			int top_goal_id = this.getTopGoalId(ids[i]);
+			array_json.add(this._GetNodeTree(argument_id,top_goal_id,ids[i]));
+			i = i + 1;
+		}
+		return array_json;
+	}
 
 	//Return newNodeId
 	@Public int Replace(int OldNodeId, Json /*DBNode*/ NewNodeTree) {
