@@ -374,15 +374,32 @@ class DCaseModel {
 	}
 
 	//Return Array[NodeId]
-	@Public int[] FindNodeFrom(String NodeType, String NodeIdSearchFrom) {
+	@Public int[] FindNodeFrom(String NodeType, int NodeIdSearchFrom) { //TODO need refactoring node_link
 	}
 
 	//Return Array[NodeId]
 	@Public int[] FindNodeByDescription(String SearchText) {
+		int[] ret = [];
+		PreparedStatement p = this.db.newPreparedStatement("SELECT node_data.id AS data_id, node_identity.id AS identity_id FROM node_data INNER JOIN node_identity ON node_data.node_identity_id=node_identity.id INNER JOIN node_type ON node_type_id=node_type.id WHERE type_name=? AND description LIKE ?");
+		p.setString("@a",NodeType);
+		p.setString("@b","%"+SearchText+"%"); //FIXME
+		ResultSet r = p.execute();
+		while(r.next()) {
+			ret.add(r.getInt("identity_id")); //FIXME
+		}
+		return ret;
 	}
 
 	//Return Array[NodeId]
 	@Public int[] FindContextByProperty(String SearchText) {
+		PreparedStatement p = this.db.newPreparedStatement("SELECT node_data.id as node_id,property_key,property_value FROM node_data,node_property WHERE node_data.id=node_property.node_data_id AND property_value LIKE ?"); //FIXME
+		p.setString("@a",SearchText);
+		ResultSet r = p.execute();
+		int[] ret = [];
+		while(r.next()) {
+			ret.add(r.getInt("node_id")); //FIXME
+		}
+		return ret;
 	}
 
 	void updatelinkIdentity(int identity_id,int link_id){
