@@ -71,6 +71,8 @@ CREATE  TABLE IF NOT EXISTS `dcasecloud`.`node_data` (
   `delete_flag` TINYINT(1) NULL DEFAULT FALSE ,
   `node_type_id` INT NOT NULL ,
   `node_identity_id` INT NOT NULL ,
+  `node_prev_id` INT NULL ,
+  `node_next_id` INT NULL ,
   PRIMARY KEY (`id`) ,
   INDEX `fk_NodeData_NodeType1_idx` (`node_type_id` ASC) ,
   INDEX `fk_node_data_node_identity1_idx` (`node_identity_id` ASC) ,
@@ -109,26 +111,27 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE  TABLE IF NOT EXISTS `dcasecloud`.`node_link` (
   `id` INT NOT NULL AUTO_INCREMENT ,
-  `parent_node_id` INT NOT NULL ,
-  `child_node_id` INT NOT NULL DEFAULT 0 ,
+  `node_parent_id` INT NOT NULL ,
+  `node_child_id` INT NOT NULL ,
   `link_identity_id` INT NOT NULL ,
+  `is_realpath` TINYINT(1) NULL DEFAULT FALSE ,
   PRIMARY KEY (`id`) ,
   INDEX `fk_NodeLink_Link1_idx` (`link_identity_id` ASC) ,
-  INDEX `fk_node_link_node_identity1` (`parent_node_id` ASC) ,
-  INDEX `fk_node_link_node_identity2` (`child_node_id` ASC) ,
+  INDEX `fk_node_link_node_data1` (`node_parent_id` ASC) ,
+  INDEX `fk_node_link_node_data2` (`node_child_id` ASC) ,
   CONSTRAINT `fk_NodeLink_Link1`
     FOREIGN KEY (`link_identity_id` )
     REFERENCES `dcasecloud`.`link_identity` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_node_link_node_identity1`
-    FOREIGN KEY (`parent_node_id` )
-    REFERENCES `dcasecloud`.`node_identity` (`id` )
+  CONSTRAINT `fk_node_link_node_data1`
+    FOREIGN KEY (`node_parent_id` )
+    REFERENCES `dcasecloud`.`node_data` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_node_link_node_identity2`
-    FOREIGN KEY (`child_node_id` )
-    REFERENCES `dcasecloud`.`node_identity` (`id` )
+  CONSTRAINT `fk_node_link_node_data2`
+    FOREIGN KEY (`node_child_id` )
+    REFERENCES `dcasecloud`.`node_data` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
