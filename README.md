@@ -64,5 +64,6 @@ API(仮なので、今後多大に変更します)
 
 ## Usage
 test/ ディレクトリ参照<br>
-misc/dcasedb.sql ... DCaseDBのテーブル作成用クエリ<br>
-misc/rm.sql      ... DBのデータ削除用クエリ
+misc/DCaseCloud.sql ... DCaseDBのテーブル作成用クエリ<br>
+misc/rm.sql          ... DBのデータ削除用クエリ(not working)<br>
+misc/init.sql        ... DCaseDBのテーブル初期化用クエリ<br>
