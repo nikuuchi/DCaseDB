@@ -118,18 +118,6 @@ class DCaseModel {
 		return this.CreateJsonNode(r);
 	}
 
-	Json GetNodeList(int snapshot_id) {
-			PreparedStatement q = this.db.newPreparedStatement("SELECT node_identity_id, url, description, delete_flag,type_name FROM node_data INNER JOIN snapshot_has_node_data ON node_data_id=node_data.id  INNER JOIN node_type ON node_type_id=node_type.id WHERE snapshot_id=?");
-		q.setInt("@a", snapshot_id);
-		ResultSet r = q.execute();
-		Json json_array = new Json([]);
-		while(r.next()) {
-			Json json = this.CreateJsonNode(r);
-			json_array.add(json);
-		}
-		return json_array;
-	}
-
 	Json GetLinkList(int snapshot_id) {
 			PreparedStatement q = this.db.newPreparedStatement("SELECT parent_node_id,child_node_id FROM node_link_has_snapshot INNER JOIN node_link ON node_link_id=node_link.id WHERE snapshot_id=?");
 		q.setInt("@a", snapshot_id);
@@ -141,6 +129,24 @@ class DCaseModel {
 			json.setInt("parent_node_id", r.getInt("parent_node_id"));
 			json.setInt("child_node_id", r.getInt("child_node_id"));
 			json_array.add(json);
+		}
+		return json_array;
+	}
+
+	Json GetNodeList(int snapshot_id) {
+			PreparedStatement q = this.db.newPreparedStatement("SELECT node_identity_id, url, description, delete_flag,type_name FROM node_data INNER JOIN snapshot_has_node_data ON node_data_id=node_data.id  INNER JOIN node_type ON node_type_id=node_type.id WHERE snapshot_id=?");
+		q.setInt("@a", snapshot_id);
+		ResultSet r = q.execute();
+		Json json_array = new Json([]);
+		while(r.next()) {
+			Json json = this.CreateJsonNode(r);
+			json_array.add(json);
+		}
+		Json linkList = this.GetLinkList(snapshot_id); TODO refactoring
+
+		int i = 0;
+		while(i < linkList.getSize()) {
+
 		}
 		return json_array;
 	}
@@ -159,9 +165,8 @@ class DCaseModel {
 		tree.setInt("snapshot_id",snapshot_id);
 		tree.setInt("top_goal_id",top_goal_id);
 		Json nodeList = this.GetNodeList(snapshot_id);
-		tree.set("nodes", nodeList);
-		Json linkList = this.GetLinkList(snapshot_id);
-		tree.set("links", linkList);
+		tree.set("node-list", nodeList);
+		//tree.set("links", linkList);
 		return tree;
 	}
 
@@ -344,9 +349,6 @@ class DCaseModel {
 
 	//Return NodeId TODO AwayGoal
 	@Public int NewLink(int ParentNodeId,int TargetNodeId) {
-	}
-
-	int GetNodeTypeId(String NodeType) {
 	}
 
 	@Public int CreateNode(int argument_id, Json json) {
