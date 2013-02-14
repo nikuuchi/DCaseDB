@@ -101,21 +101,35 @@ class DCaseModel {
 
 	Json CreateJsonNode(ResultSet r) {
 		Json json = new Json();
-		json.setInt("node_id", r.getInt("node_identity_id"));
-		json.setString("url", r.getString("url"));
-		json.setString("description", r.getString("description"));
-		json.setBoolean("delete_flag", r.getBoolean("delete_flag"));
-		json.setString("type", r.getString("type_name"));
+		json.setInt("ThisNodeId", r.getInt("node_id"));
+		json.setInt("NodeIdentityId", r.getInt("node_identity_id"));
+		json.setString("Url", r.getString("url"));
+		json.setString("Description", r.getString("description"));
+		json.setBoolean("DeleteFlag", r.getBoolean("delete_flag"));
+		json.setString("Type", r.getString("type_name"));
+		json.set("Children", this.GetChildLinkList(r.getInt("node_id")));
 		return json;
 	}
 
 	//Return Node
 	@Public Json GetNode(int node_id) {
-		PreparedStatement q = this.db.newPreparedStatement("SELECT node_identity_id, url, description, delete_flag,type_name FROM node_identity INNER JOIN node_data ON current_node_id=node_data.id INNER JOIN node_type ON node_type_id=node_type.id WHERE node_identity.id=?");
+		PreparedStatement q = this.db.newPreparedStatement("SELECT node_data.id AS node_id,node_identity_id, url, description, delete_flag,type_name FROM node_identity INNER JOIN node_data ON current_node_id=node_data.id INNER JOIN node_type ON node_type_id=node_type.id WHERE node_data.id=?");
 		q.setInt("@a",node_id);
 		ResultSet r = q.execute();
 		r.next();
 		return this.CreateJsonNode(r);
+	}
+
+	Json GetChildLinkList(int node_id) {
+			PreparedStatement q = this.db.newPreparedStatement("SELECT child_node_id FROM node_link_has_snapshot INNER JOIN node_link ON node_link_id=node_link.id WHERE parent_node_id=?"); //FIXME snapshot_id
+		//q.setInt("@a", snapshot_id);
+		q.setInt("@b", node_id);
+		ResultSet r = q.execute();
+		Json json_array = new Json([]);
+		while(r.next()) {
+			json.add(r.getInt("child_node_id"));
+		}
+		return json;
 	}
 
 	Json GetLinkList(int snapshot_id) {
@@ -134,7 +148,7 @@ class DCaseModel {
 	}
 
 	Json GetNodeList(int snapshot_id) {
-			PreparedStatement q = this.db.newPreparedStatement("SELECT node_identity_id, url, description, delete_flag,type_name FROM node_data INNER JOIN snapshot_has_node_data ON node_data_id=node_data.id  INNER JOIN node_type ON node_type_id=node_type.id WHERE snapshot_id=?");
+			PreparedStatement q = this.db.newPreparedStatement("SELECT node_data.id AS node_id,node_identity_id, url, description, delete_flag,type_name FROM node_data INNER JOIN snapshot_has_node_data ON node_data_id=node_data.id  INNER JOIN node_type ON node_type_id=node_type.id WHERE snapshot_id=?");
 		q.setInt("@a", snapshot_id);
 		ResultSet r = q.execute();
 		Json json_array = new Json([]);
@@ -142,12 +156,7 @@ class DCaseModel {
 			Json json = this.CreateJsonNode(r);
 			json_array.add(json);
 		}
-		Json linkList = this.GetLinkList(snapshot_id); TODO refactoring
 
-		int i = 0;
-		while(i < linkList.getSize()) {
-
-		}
 		return json_array;
 	}
 
@@ -454,18 +463,55 @@ class DCaseModel {
 		return r.getInt("current_process_id");
 	}
 
+	void createNodeList(int argument_id, Json node_list) {
+		int i = 0;
+		while(i < node_list.getSize()) {
+			this.CreateNode(argument_id,node_list[i]);
+			i = i + 1;
+		}
+	}
+
+	void replaceNodeList(int argument_id, Json node_list) {
+		int i = 0;
+		while(i < node_list.getSize()) {
+			this.UpdateNode(argument_id,node_list[i]);
+			i = i + 1;
+		}
+	}
+
+	void deleteNodeList(int argument_id, Json node_list) {
+		int i = 0;
+		while(i < node_list.getSize()) {
+			this.DeleteNode(argument_id,node_list[i]);
+			i = i + 1;
+		}
+	}
+
 	@Public Json Commit(int argument_id, Json args) {
 		int prev_snapshot_id = this.getCurrentSnapShot(argument_id);
 		int process_id  = this.getCurrentProcessContext(argument_id);
 		int top_goal_id = this.getTopGoalId(prev_snapshot_id);
 		int snapshot_id = this.initSnapshot(prev_snapshot_id,top_goal_id); //FIXME
-		System.p(prev_snapshot_id);
 		this.updateProcessContext(process_id,snapshot_id);
 
-		Json nodes = args.get("nodes");
+		Json commit = args.get("commit");
+
+		int i = 0;
+		while(i < commit.getSize()) {
+			String command = commit[i].getString("command");
+			Json node_list = commit[i].get("node-list");
+			if(command == "insert") {
+				this.createNodeList(argument_id,node_list);
+			} else if(command == "replace") {
+				this.replaceNodeList(argument_id,node_list);
+			} else if(command == "delete") {
+				this.deleteNodeList(argument_id,node_list);
+			} //FIXME Error Handling
+		}
+		/*
+		Json nodes = args.get("node-list");
 		Map[int] node_ids = new Map[int];
 		int i = 0;
-		System.p(nodes);
 		while(i < nodes.getSize()) {
 			System.p("hoge");
 			String method = nodes[i].getString("method");
@@ -490,6 +536,7 @@ class DCaseModel {
 			}
 			i = i + 1;
 		}
+		*/
 
 		this.insertSnapshotNodeData(snapshot_id,argument_id);
 		this.insertSnapshotNodeLink(snapshot_id,argument_id);
@@ -498,7 +545,7 @@ class DCaseModel {
 // ProcessContext
 	//return ProcessId
 	@Public int OpenProcessContext(int argument_id, int process_type, String justification, String commiter_name) {
-		int current_snapshot_id = this.getCurrentSnapShot(argument_id);
+		int current_snapshot_id = this.getCurrentSnapShot(argument_id); //FIXME
 		return this.initProcessContext(current_snapshot_id, process_type, justification, commiter_name);
 	}
 
