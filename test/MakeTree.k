@@ -9,31 +9,31 @@ void main() {
 	int top_id = nodeTree.getInt("top_goal_id");
 	System.p(model.GetNode(top_id));
 
-	Json tree = new Json();
-	Json nodes = new Json([]);
-	tree.set("nodes",nodes);
-	Json strategy = new Json();
-	strategy.setString("method","Create");
-	strategy.setString("node_id","hoge1");
-	strategy.setString("description","test description");
-	strategy.setString("type","Strategy");
-	strategy.setString("url","www.sample");
-	nodes.add(strategy);
+	Json json = new Json();
+	Json commit = new Json([]);
+	Json commitObj1 = new Json();
+	commitObj1.setString("branch-name","mybranch");
+	commitObj1.setString("command","insert");
+	Json commitObj1_nodelist = new Json([]);
 
-	Json links = new Json([]);
-	tree.set("links",links);
-	Json l = new Json();
-	l.setString("method","Create");
-	l.setString("child","new");
-	l.setInt("parent_node_id",top_id);
-	l.setString("child_node_id","hoge1");
-	links.add(l);
+	Json json_node1 = new Json();
+	json_node1.setString("NodeType"       , "Context");
+	json_node1.setInt("ParentNodeId"      , top_id);
+	json_node1.setInt("ThisNodeId"        , 0);
+	json_node1.setInt("PrevNodeId"        , 0);
+	json_node1.setInt("NextNodeId"        , 0);
+	json_node1.setInt("BelongedArgumentId", id);
+	json_node1.set("Children"             , new Json([]));
+	json_node1.setString("Description"    , "test description");
+	json_node1.set("Attributes"           , new Json());
 
-	System.p(tree);
+	commitObj1_nodelist.add(json_node1);
+	commitObj1.set("node-list",commitObj1_nodelist);
+	commit.add(commitObj1);
+	json.set("commit",commit);
+	System.p(json);
 
-	model.Commit(id,tree);
+	model.Commit(id,json);
 	System.p(model.GetNodeTree(id));
-
 }
-
 main();
