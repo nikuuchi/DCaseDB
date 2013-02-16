@@ -90,7 +90,7 @@ class DCaseModel {
 	}
 
 	@Public int[] GetArgumentList() {
-		PreparedStatement q = this.db.newPreparedStatement("SELECT `id` FROM `argument`");
+		PreparedStatement q = this.db.newPreparedStatement("SELECT `id` FROM `argument` WHERE `id`!=0");
 		ResultSet r = q.execute();
 		int[] ret = [];
 		while(r.next()) {
@@ -194,16 +194,19 @@ class DCaseModel {
 
 	//Return NodeTree
 	@Public Json  GetNodeTree(int argument_id) {
-		int current_snapshot_id = this.getCurrentSnapShot(argument_id);
-		int top_goal_id = this.getTopGoalId(current_snapshot_id);
-		return this._GetNodeTree(argument_id,top_goal_id,current_snapshot_id);
+		return this.GetNodeTree(argument_id, this.getCurrentSnapShot(argument_id));
+	}
+
+	@Public Json  GetNodeTree(int argument_id, int snapshot_id) {
+		int top_goal_id = this.getTopGoalId(snapshot_id);
+		return this._GetNodeTree(argument_id,top_goal_id,snapshot_id);
 	}
 
 	int[] _GetSnapshotList(int start_id, int end_id) {
 		int[] ret = [];
 		ret.add(end_id);
 		int it = end_id;
-		while(it !=start_id) {
+		while(it != start_id) {
 			PreparedStatement p = this.db.newPreparedStatement("SELECT `prev_snapshot_id` FROM `snapshot` WHERE `id`=?");
 			p.setInt("@a", it);
 			ResultSet r = p.execute();
@@ -216,7 +219,7 @@ class DCaseModel {
 		}
 		int[] reverse = [];
 		int i = ret.getSize()-1;
-		while(i>0) {
+		while(i>=0) {
 			reverse.add(ret[i]);
 			i = i - 1;
 		}
@@ -594,7 +597,7 @@ class DCaseModel {
 
 	@Public int[] GetSnapshotList(int argument_id) {
 		int end_id = this.getCurrentSnapShot(argument_id);
-		return this. _GetSnapshotList(0, end_id);
+		return this._GetSnapshotList(0, end_id);
 	}
 
 //### D-Script
