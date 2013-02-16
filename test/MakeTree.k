@@ -25,7 +25,9 @@ void main() {
 	json_node1.setInt("BelongedArgumentId", id);
 	json_node1.set("Children"             , new Json([]));
 	json_node1.setString("Description"    , "test description");
-	json_node1.set("Attributes"           , new Json());
+	Json attr = new Json();
+	attr.setString("hoge","hogehjoh");
+	json_node1.set("Attributes"           , attr);
 
 	commitObj1_nodelist.add(json_node1);
 	commitObj1.set("node-list",commitObj1_nodelist);
