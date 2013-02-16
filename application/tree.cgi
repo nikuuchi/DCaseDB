@@ -33,7 +33,7 @@ void main() {
 	int[] timeline = model.getSnapshotList(param);
 	int i = 0;
 	while(i < timeline.getSize()) {
-		stdout.println("<a href=\"tree.k?t=${param}&h=${timeline[i]}\">${timeline[i]}</a> ");
+		stdout.println("<a href=\"tree.cgi?t=${param}&h=${timeline[i]}\">${timeline[i]}</a> ");
 		i = i + 1;
 	}
 	end();

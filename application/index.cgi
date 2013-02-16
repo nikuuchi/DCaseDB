@@ -9,7 +9,7 @@ void main() {
 	int[] argument_list = model.GetArgumentList();
 	int i = 0;
 	while(i < argument_list.getSize()) {
-		stdout.println("<li><a href=\"tree.k?t=${argument_list[i]}\">${argument_list[i]}</a></li>");
+		stdout.println("<li><a href=\"tree.cgi?t=${argument_list[i]}\">${argument_list[i]}</a></li>");
 		i = i + 1;
 	}
 	stdout.println("</ul>");
