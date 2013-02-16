@@ -457,33 +457,6 @@ class DCaseModel {
 		this.updatelinkIdentity(link_id,l_id);
 	}
 
-	void CreateLink(int argument_id, Map[int] node_ids, Json json) {
-		int parent_id;
-		int child_id;
-		if(json.hasKey("parent")) {
-			parent_id = node_ids.get(json.getString("node_parent_id"));
-		} else {
-			parent_id = json.getInt("node_parent_id");
-		}
-		if(json.hasKey("child")) {
-			child_id = node_ids.get(json.getString("node_child_id"));
-		} else {
-			child_id = json.getInt("node_child_id");
-		}
-		PreparedStatement p = this.db.newPreparedStatement("INSERT INTO `link_identity`(`argument_id`) VALUES(?)");
-		p.setInt("@a",argument_id);
-		p.execute();
-		int link_id = p.getInsertId();
-
-		PreparedStatement p_node_link = this.db.newPreparedStatement("INSERT INTO `node_link`(`node_parent_id`,`node_child_id`,`link_identity_id`) VALUES(?,?,?)");
-		p_node_link.setInt("@a",parent_id);
-		p_node_link.setInt("@b",child_id);
-		p_node_link.setInt("@c",link_id);
-		p_node_link.execute();
-		int l_id = p_node_link.getInsertId();
-		this.updatelinkIdentity(link_id,l_id);
-	}
-
 	int getCurrentSnapShot(int argument_id) {
 		PreparedStatement p = this.db.newPreparedStatement("SELECT current_snapshot_id FROM argument INNER JOIN process_context ON current_process_id=process_context.id WHERE argument.id=?");
 		p.setInt("@a", argument_id);
@@ -546,35 +519,6 @@ class DCaseModel {
 			} //FIXME Error Handling
 			i = i + 1;
 		}
-		/*
-		Json nodes = args.get("node-list");
-		Map[int] node_ids = new Map[int];
-		int i = 0;
-		while(i < nodes.getSize()) {
-			System.p("hoge");
-			String method = nodes[i].getString("method");
-			if(method == "Create") { //FIXME
-				node_ids.set(nodes[i].getString("node_id"),this.CreateNode(argument_id,nodes[i]));
-			}else if(method == "Update") {
-				this.UpdateNode(argument_id,nodes[i]);
-			}else if(method == "Delete") {
-				this.DeleteNode(argument_id,nodes[i]);
-			}//TODO Error Handling
-			i = i + 1;
-		}
-
-		Json links = args.get("links");
-		i = 0;
-		while(i < links.getSize()) {
-			String method = links[i].getString("method");
-			if(method == "Create") { //FIXME
-				this.CreateLink(argument_id,node_ids,links[i]);
-			}else if(method == "Delete") {
-				//FIXME
-			}
-			i = i + 1;
-		}
-		*/
 
 		this.insertSnapshotNodeData(snapshot_id,argument_id);
 		this.insertSnapshotNodeLink(snapshot_id,argument_id);
