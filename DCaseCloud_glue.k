@@ -582,6 +582,19 @@ class DCaseModel {
 	}
 
 	@Public int[] GetProcessContextIds(int argument_id) {
+		PreparedStatement p = this.db.newPreparedStatement("SELECT `process_context_id` FROM  `argument_has_process_context` WHERE `argument_id`=?");
+		p.setInt("@a",argument_id);
+		ResultSet r = p.execute();
+		int[] ret = [];
+		while(r.next()) {
+			ret.add(r.getInt("process_context_id"));
+		}
+		return ret;
+	}
+
+	@Public int[] GetSnapshotList(int argument_id) {
+		int end_id = this.getCurrentSnapShot(argument_id);
+		return this. _GetSnapshotList(0, end_id);
 	}
 
 //### D-Script
