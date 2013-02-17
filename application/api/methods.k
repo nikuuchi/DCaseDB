@@ -16,6 +16,7 @@ Json createMessage(Json result) {
 	json.set("result", result);
 	return json;
 }
+
 DCaseModel model = new DCaseModel("dcasedb", "dcasedb");
 const IntList=Array[int];
 @Public IntList ConvertToIntList(Json json) {
@@ -275,4 +276,3 @@ class JsonRPCServer {
 		//this.functions.set("Rebuttal"             ,Rebuttal);
 	}
 }
-

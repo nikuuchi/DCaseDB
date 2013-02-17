@@ -1,4 +1,4 @@
-#! /usr/local/bin/minikonoha
+#! /usr/local/bin/konoha
 
 Import("Type.Json");
 Import("Syntax.CStyleWhile");
@@ -25,13 +25,12 @@ String getMsg() {
 
 void main() {
 	Json j = Json.parse(getMsg());
-	API api = new API();
-	API_Method method = api.api[j.getString("method")];
-	if (!method.paramCheck(j.get("params"))) {
+	JsonRPCServer api = new JsonRPCServer();
+	api.registerFunctions();
+	//if (!method.paramCheck(j.get("params"))) {
 		// error handling
-	}
-	String result = method.run(j.get("params"));
-	flush(result);
+	//}
+	api.dispatch(j.getString("method",j.get("params")));
 }
 
 main();
