@@ -546,7 +546,7 @@ class DCaseModel {
 		}
 	}
 
-	@Public Json Commit(int argument_id, Json args) {
+	@Public void Commit(int argument_id, Json args) {
 		int prev_snapshot_id = this.getCurrentSnapShot(argument_id);
 		int process_id  = this.getCurrentProcessContext(argument_id);
 		int top_goal_id = this.getTopGoalId(prev_snapshot_id);

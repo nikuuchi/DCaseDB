@@ -7,6 +7,8 @@ Import("Java.Class");
 Import("posix.process");
 Import("Type.File");
 
+Load("methods.k");
+
 String getMsg() {
 	String mtd_type = System.getenv("REQUEST_METHOD");
 	if (mtd_type != "POST") {
@@ -23,7 +25,7 @@ String getMsg() {
 
 void main() {
 	Json j = Json.parse(getMsg());
-	WebAPI api = new WebAPI();
+	API api = new API();
 	API_Method method = api.api[j.getString("method")];
 	if (!method.paramCheck(j.get("params"))) {
 		// error handling
