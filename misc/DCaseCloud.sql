@@ -117,8 +117,8 @@ CREATE  TABLE IF NOT EXISTS `dcasecloud`.`node_link` (
   `is_realpath` TINYINT(1) NULL DEFAULT FALSE ,
   PRIMARY KEY (`id`) ,
   INDEX `fk_NodeLink_Link1_idx` (`link_identity_id` ASC) ,
-  INDEX `fk_node_link_node_data1` (`node_parent_id` ASC) ,
-  INDEX `fk_node_link_node_data2` (`node_child_id` ASC) ,
+  INDEX `fk_node_link_node_data1_idx` (`node_parent_id` ASC) ,
+  INDEX `fk_node_link_node_data2_idx` (`node_child_id` ASC) ,
   CONSTRAINT `fk_NodeLink_Link1`
     FOREIGN KEY (`link_identity_id` )
     REFERENCES `dcasecloud`.`link_identity` (`id` )
@@ -219,7 +219,7 @@ ENGINE = InnoDB;
 -- Table `dcasecloud`.`node_property`
 -- -----------------------------------------------------
 CREATE  TABLE IF NOT EXISTS `dcasecloud`.`node_property` (
-  `id` INT NOT NULL ,
+  `id` INT NOT NULL AUTO_INCREMENT ,
   `property_key` VARCHAR(127) NULL ,
   `property_value` TEXT NULL ,
   `node_data_id` INT NOT NULL ,

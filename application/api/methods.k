@@ -8,16 +8,18 @@ Import("Syntax.CStyleWhile");
 Import("Type.File");
 Import("Type.Json");
 Import("MiniKonoha.Map");
+Import("Deos.DCaseCloud");
 
 Json createMessage(Json result) {
 	Json json = new Json();
 	json.setString("jsonrpc", "2.0");
-	json.setString("version", "0.0");
+	json.setString("version", "1.0");
 	json.set("result", result);
 	return json;
 }
 
 DCaseModel model = new DCaseModel("dcasedb", "dcasedb");
+
 const IntList=Array[int];
 @Public IntList ConvertToIntList(Json json) {
 	IntList a = [];
@@ -44,9 +46,9 @@ void CreateTopGoal (Json request) {
 	String Description = request.getString("Description");
 	String Commiter = request.getString("Commiter");
 	int processType = request.getInt("ProcessType");
-	int ArgumentId = model.CreateTopGoal(Description,processType,Justification,Commiter);
+	int ArgumentId = global.model.CreateTopGoal(Description,processType,Justification,Commiter);
 	Json res = new Json();
-	res.setInt("ArgumentId",ArgumentId);
+	res.setInt("BelongedArgumentId",ArgumentId);
 	Json response = createMessage(res);
 	stdout.println(response);
 }
@@ -98,7 +100,7 @@ void DeleteNode (Json request) {
 void FindNodeFrom (Json request) {
 	String NodeType = request.getString("NodeType");
 	int NodeIdSearchFrom = request.getInt("NodeIdSearchFrom");
-	int[] res = model.FindNodeFrom(NodeType, NodeIdSearchFrom);
+	int[] res = global.model.FindNodeFrom(NodeType, NodeIdSearchFrom);
 	Json response = createMessage(ConvertFromIntList(res));
 	stdout.println(response);
 }
@@ -106,16 +108,16 @@ void FindNodeFrom (Json request) {
 
 void FindNodeByDescription (Json request) {
 	String SearchText = request.getString("SearchText");
-	int[] res = model.FindNodeByDescription(SearchText);
+	int[] res = global.model.FindNodeByDescription(SearchText);
 	Json res_json = new Json();
 	res_json.set("NodeIdList",ConvertFromIntList(res));
 	Json response = createMessage(res_json);
 	stdout.println(response);
 }
 
-void FindContextByProperty (Json request) {
+void FindContextByAttribute (Json request) {
 	String SearchText = request.getString("SearchText");
-	int[] res = model.FindContextByProperty(SearchText);
+	int[] res = global.model.FindContextByProperty(SearchText);
 	Json res_json = new Json();
 	res_json.set("NodeIdList",ConvertFromIntList(res));
 	Json response = createMessage(res_json);
@@ -125,14 +127,14 @@ void FindContextByProperty (Json request) {
 void Commit (Json request) {
 	int BelongedArgumentId = request.getInt("BelongedArgumentId");
 	Json args = request.get("commit");
-	model.Commit(BelongedArgumentId,commit);
+	global.model.Commit(BelongedArgumentId,args);
 	Json response = createMessage(new Json()); //FIXME Response is void
 	stdout.println(response);
 }
 
 void getNode (Json request) {
 	int node_id = request.getInt("NodeId");
-	Json node = model.getNode(node_id);
+	Json node = global.model.getNode(node_id);
 	Json res = new Json();
 	res.set("Node",node);
 	Json response = createMessage(res);
@@ -140,7 +142,7 @@ void getNode (Json request) {
 }
 
 void getArgumentList (Json request) {
-	int[] argumentIdList = model.getArgumentList();
+	int[] argumentIdList = global.model.getArgumentList();
 	Json res = new Json();
 	res.set("ArgumentIdList", ConvertFromIntList(argumentIdList));
 	Json response = createMessage(res);
@@ -149,9 +151,9 @@ void getArgumentList (Json request) {
 
 void getNodeTree (Json request) {
 	int BelongedArgumentId = request.getInt("BelongedArgumentId");
-	Json NodeTree = model.getNodeTree(BelongedArgumentId);
+	Json NodeTree = global.model.getNodeTree(BelongedArgumentId);
 	Json res = new Json();
-	res.set("Tree");
+	res.set("Tree",NodeTree);
 	Json response = createMessage(res);
 	stdout.println(response);
 }
@@ -159,7 +161,7 @@ void getNodeTree (Json request) {
 void getNodeTreeFromSnapshotId (Json request) {
 	int BelongedArgumentId = request.getInt("BelongedArgumentId");
 	int SnapshotId = request.getInt("SnapshotId");
-	Json NodeTree = model.getNodeTree(BelongedArgumentId,SnapshotId);
+	Json NodeTree = global.model.getNodeTree(BelongedArgumentId,SnapshotId);
 	Json res = new Json();
 	res.set("Tree");
 	Json response = createMessage(res);
@@ -170,7 +172,7 @@ void getNodeTreeBetween (Json request) {
 	int BelongedArgumentId = request.getInt("BelongedArgumentId");
 	int snapshot_start_id = request.getInt("StartId");
 	int snapshot_end_id = request.getInt("EndId");
-	Json NodeTree = model.getNodeTree(BelongedArgumentId,snapshot_start_id,snapshot_end_id);
+	Json NodeTree = global.model.getNodeTree(BelongedArgumentId,snapshot_start_id,snapshot_end_id);
 	Json res = new Json();
 	res.set("Tree"); //FIXME
 	Json response = createMessage(res);
@@ -182,7 +184,7 @@ void OpenProcessContext (Json request) {
 	int process_type = request.getInt("ProcessType");
 	int BelongedArgumentId = request.getInt("BelongedArgumentId");
 	String commiter_name = request.getString("Commiter");
-	int processId = model.OpenProcessContext(Justification,process_type,BelongedArgumentId,commiter_name);
+	int processId = global.model.OpenProcessContext(Justification,process_type,BelongedArgumentId,commiter_name);
 	Json res = Json.parse("{\"ProcessId\":${processId}}");
 	Json response = createMessage(res);
 	stdout.println(response);
@@ -191,7 +193,7 @@ void OpenProcessContext (Json request) {
 //FIXME
 void CloseProcessContext (Json request) {
 	int BelongedArgumentId = request.getInt("BelongedArgumentId");
-	int process_id = request.getInt("process_id");
+	int process_id = request.getInt("ProcessId");
 	String Justification = request.getString("Justification");
 	Json response = createMessage(new Json());
 	stdout.println(response);
@@ -199,7 +201,7 @@ void CloseProcessContext (Json request) {
 
 void getProcessContextIds (Json request) {
 	int BelongedArgumentId = request.getInt("BelongedArgumentId");
-	int[] res = model.getProcessContextIds(BelongedArgumentId);
+	int[] res = global.model.getProcessContextIds(BelongedArgumentId);
 	Json res_json = new Json();
 	res_json.set("ProcessIdList",ConvertFromIntList(res));
 	Json response = createMessage(res_json);
@@ -208,7 +210,7 @@ void getProcessContextIds (Json request) {
 
 void getSnapshotList (Json request) {
 	int BelongedArgumentId = request.getInt("BelongedArgumentId");
-	int[] res = model.getSnapshotList(BelongedArgumentId);
+	int[] res = global.model.getSnapshotList(BelongedArgumentId);
 	Json res_json = new Json();
 	res_json.set("SnapshotIdList",ConvertFromIntList(res));
 	Json response = createMessage(res_json);
@@ -260,7 +262,7 @@ class JsonRPCServer {
 		//this.functions.set("DeleteNode"           ,DeleteNode);
 		//this.functions.set("FindNodeFrom"         ,FindNodeFrom);
 		this.functions.set("FindNodeByDescription",FindNodeByDescription);
-		this.functions.set("FindContextByProperty",FindContextByProperty);
+		this.functions.set("FindContextByAttribute",FindContextByAttribute);
 		this.functions.set("Commit"               ,Commit);
 		this.functions.set("getNode"              ,getNode);
 		this.functions.set("getArgumentList"      ,getArgumentList);

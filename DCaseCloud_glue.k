@@ -110,6 +110,21 @@ class DCaseModel {
 		return json;
 	}
 
+	Json CreateJsonNode(ResultSet r,int snapshot_id) {
+		Json json = new Json();
+		json.setInt("ThisNodeId", r.getInt("node_id"));
+		json.setInt("NodeIdentityId", r.getInt("node_identity_id"));
+		json.setInt("PrevNodeId", r.getInt("node_prev_id"));
+		json.setInt("NextNodeId", r.getInt("node_next_id"));
+		json.setString("Url", r.getString("url"));
+		json.setString("Description", r.getString("description"));
+		json.setBoolean("DeleteFlag", r.getBoolean("delete_flag"));
+		json.setString("NodeType", r.getString("type_name"));
+		json.set("Children", this.GetChildLinkList(r.getInt("node_id"),snapshot_id));
+		int node_id = r.getInt("node_id");
+		json.set("Attributes", this.getAttribute(node_id));
+		return json;
+	}
 	Json CreateJsonNode(ResultSet r) {
 		Json json = new Json();
 		json.setInt("ThisNodeId", r.getInt("node_id"));
@@ -119,7 +134,7 @@ class DCaseModel {
 		json.setString("Url", r.getString("url"));
 		json.setString("Description", r.getString("description"));
 		json.setBoolean("DeleteFlag", r.getBoolean("delete_flag"));
-		json.setString("Type", r.getString("type_name"));
+		json.setString("NodeType", r.getString("type_name"));
 		json.set("Children", this.GetChildLinkList(r.getInt("node_id")));
 		int node_id = r.getInt("node_id");
 		json.set("Attributes", this.getAttribute(node_id));
@@ -137,8 +152,19 @@ class DCaseModel {
 
 	Json GetChildLinkList(int node_id) {
 			PreparedStatement q = this.db.newPreparedStatement("SELECT node_child_id FROM node_link_has_snapshot INNER JOIN node_link ON node_link_id=node_link.id WHERE node_parent_id=?"); //FIXME snapshot_id
-		//q.setInt("@a", snapshot_id);
 		q.setInt("@b", node_id);
+		ResultSet r = q.execute();
+		Json json = new Json([]);
+		while(r.next()) {
+			json.add(r.getInt("node_child_id"));
+		}
+		return json;
+	}
+
+	Json GetChildLinkList(int node_id, int snapshot_id) {
+			PreparedStatement q = this.db.newPreparedStatement("SELECT node_child_id FROM node_link_has_snapshot INNER JOIN node_link ON node_link_id=node_link.id WHERE node_parent_id=? AND snapshot_id=?"); //FIXME snapshot_id
+		q.setInt("@b", node_id);
+		q.setInt("@a", snapshot_id);
 		ResultSet r = q.execute();
 		Json json = new Json([]);
 		while(r.next()) {
@@ -168,7 +194,7 @@ class DCaseModel {
 		ResultSet r = q.execute();
 		Json json_array = new Json([]);
 		while(r.next()) {
-			Json json = this.CreateJsonNode(r);
+			Json json = this.CreateJsonNode(r,snapshot_id);
 			json_array.add(json);
 		}
 
@@ -185,11 +211,11 @@ class DCaseModel {
 
 	Json _GetNodeTree(int argument_id, int top_goal_id, int snapshot_id) {
 		Json tree = new Json();
-		tree.setInt("argument_id",argument_id);
-		tree.setInt("snapshot_id",snapshot_id);
-		tree.setInt("top_goal_id",top_goal_id);
+		tree.setInt("BelongedArgumentId",argument_id);
+		tree.setInt("SnapshotId",snapshot_id);
+		tree.setInt("TopGoalId",top_goal_id);
 		Json nodeList = this.GetNodeList(snapshot_id);
-		tree.set("node-list", nodeList);
+		tree.set("NodeList", nodeList);
 		//tree.set("links", linkList);
 		return tree;
 	}
@@ -462,9 +488,9 @@ class DCaseModel {
 	//Return Array[NodeId]
 	@Public int[] FindNodeByDescription(String SearchText) {
 		int[] ret = [];
-		PreparedStatement p = this.db.newPreparedStatement("SELECT node_data.id AS data_id, node_identity.id AS identity_id FROM node_data INNER JOIN node_identity ON node_data.node_identity_id=node_identity.id INNER JOIN node_type ON node_type_id=node_type.id WHERE type_name=? AND description LIKE ?");
-		p.setString("@a",NodeType);
-		p.setString("@b","%"+SearchText+"%"); //FIXME
+		PreparedStatement p = this.db.newPreparedStatement("SELECT node_data.id AS data_id, node_identity.id AS identity_id FROM node_data INNER JOIN node_identity ON node_data.node_identity_id=node_identity.id INNER JOIN node_type ON node_type_id=node_type.id WHERE description LIKE ?");
+		//p.setString("@a",NodeType);
+		p.setString("@a","%"+SearchText+"%"); //FIXME
 		ResultSet r = p.execute();
 		while(r.next()) {
 			ret.add(r.getInt("data_id")); //FIXME
@@ -474,8 +500,9 @@ class DCaseModel {
 
 	//Return Array[NodeId]
 	@Public int[] FindContextByProperty(String SearchText) {
-		PreparedStatement p = this.db.newPreparedStatement("SELECT node_data.id as node_id,property_key,property_value FROM node_data,node_property WHERE node_data.id=node_property.node_data_id AND property_value LIKE ?"); //FIXME
+		PreparedStatement p = this.db.newPreparedStatement("SELECT node_data.id as node_id,property_key,property_value FROM node_data,node_property WHERE node_data.id=node_property.node_data_id AND( property_key LIKE ? OR property_value LIKE ?)"); //FIXME
 		p.setString("@a",SearchText);
+		p.setString("@b",SearchText);
 		ResultSet r = p.execute();
 		int[] ret = [];
 		while(r.next()) {
@@ -553,12 +580,12 @@ class DCaseModel {
 		int snapshot_id = this.initSnapshot(prev_snapshot_id,top_goal_id); //FIXME
 		this.updateProcessContext(process_id,snapshot_id);
 
-		Json commit = args.get("commit");
+		Json commit = args;//.get("commit");
 
 		int i = 0;
 		while(i < commit.getSize()) {
 			String command = commit[i].getString("command");
-			Json node_list = commit[i].get("node-list");
+			Json node_list = commit[i].get("NodeList");
 			if(command == "insert") {
 				this.createNodeList(argument_id,node_list);
 			} else if(command == "replace") {

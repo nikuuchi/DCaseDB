@@ -35,7 +35,7 @@ void main() {
 	json.set("commit",commit);
 	System.p(json);
 
-	model.Commit(id,json);
+	model.Commit(id,json.get("commit"));
 	System.p(model.GetNodeTree(id));
 }
 main();

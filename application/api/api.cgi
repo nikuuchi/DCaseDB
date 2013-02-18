@@ -1,11 +1,14 @@
-#! /usr/local/bin/konoha
+#!/usr/local/bin/konoha
+
 
 Import("Type.Json");
+Import("Type.File");
 Import("Syntax.CStyleWhile");
 Import("Syntax.Null");
 Import("Java.Class");
+Import("JavaScript.Array");
+Import("JavaScript.String");
 Import("posix.process");
-Import("Type.File");
 
 Load("methods.k");
 
@@ -14,13 +17,13 @@ String getMsg() {
 	if (mtd_type != "POST") {
 		// ERROR Handling: only POST Method is available
 	}
-	String query;
+	String query = "";
 	String ln;
 	FILE f = stdin;
 	while ((ln = f.readLine()) != null) {
 		query = query + ln;
 	}
-	return query;
+	return query.slice(5);
 }
 
 void main() {
@@ -30,7 +33,8 @@ void main() {
 	//if (!method.paramCheck(j.get("params"))) {
 		// error handling
 	//}
-	api.dispatch(j.getString("method",j.get("params")));
+	stdout.println("Content-Type: application/json; charset=utf-8\n\n");
+	api.dispatch(j.getString("method"),j.get("params"));
 }
 
 main();
