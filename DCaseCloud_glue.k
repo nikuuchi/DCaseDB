@@ -606,7 +606,9 @@ class DCaseModel {
 	//return ProcessId
 	@Public int OpenProcessContext(int argument_id, int process_type, String justification, String commiter_name) {
 		int current_snapshot_id = this.getCurrentSnapShot(argument_id); //FIXME
-		return this.initProcessContext(current_snapshot_id, process_type, justification, commiter_name);
+		int ProcessId = this.initProcessContext(current_snapshot_id, process_type, justification, commiter_name);
+		this.insertArgumentHasProcessContext(ProcessId,argument_id);
+		return ProcessId;
 	}
 
 	@Public int CloseProcessContext(int argument_id, int process_id, String justification) {

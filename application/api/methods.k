@@ -163,7 +163,7 @@ void getNodeTreeFromSnapshotId (Json request) {
 	int SnapshotId = request.getInt("SnapshotId");
 	Json NodeTree = global.model.getNodeTree(BelongedArgumentId,SnapshotId);
 	Json res = new Json();
-	res.set("Tree");
+	res.set("Tree",NodeTree);
 	Json response = createMessage(res);
 	stdout.println(response);
 }
@@ -174,7 +174,7 @@ void getNodeTreeBetween (Json request) {
 	int snapshot_end_id = request.getInt("EndId");
 	Json NodeTree = global.model.getNodeTree(BelongedArgumentId,snapshot_start_id,snapshot_end_id);
 	Json res = new Json();
-	res.set("Tree"); //FIXME
+	res.set("Tree",NodeTree); //FIXME
 	Json response = createMessage(res);
 	stdout.println(response);
 }
@@ -184,7 +184,7 @@ void OpenProcessContext (Json request) {
 	int process_type = request.getInt("ProcessType");
 	int BelongedArgumentId = request.getInt("BelongedArgumentId");
 	String commiter_name = request.getString("Commiter");
-	int processId = global.model.OpenProcessContext(Justification,process_type,BelongedArgumentId,commiter_name);
+	int processId = global.model.OpenProcessContext(BelongedArgumentId,process_type,Justification,commiter_name);
 	Json res = Json.parse("{\"ProcessId\":${processId}}");
 	Json response = createMessage(res);
 	stdout.println(response);
