@@ -465,8 +465,29 @@ class DCaseModel {
 		return node_data_id;
 	}
 
+	@Public int CreateNode(int argument_id, Json json, Map[int] m) {
+		if(m.has(json.getInt("ParentNodeId").toString())) {
+			json.setInt("ParentNodeId",m.get(json.getInt("ParentNodeId").toString()));
+		}
+		int node_identity_id = this.initNode_identity(argument_id);
+		int type_id = this.getNodeType(json.getString("NodeType"))
+		int node_data_id = this.createNodeDataFromJson(type_id,node_identity_id,json);
+		this.updateNodeIdentity(node_identity_id,node_data_id);
+		if(json.getInt("ThisNodeId")<0) {
+			m.set(json.getInt("ThisNodeId").toString(),node_data_id);
+		}
+		return node_data_id;
+	}
+
 	@Public void UpdateNode(int argument_id, Json json) {
-		int node_identity_id = json.getString("NodeIdentityId").toint;
+		int node_identity_id = json.getInt("NodeIdentityId");
+		int type_id = this.getNodeType(json.getString("NodeType"));
+		int node_data_id = this.updateNodeDataFromJson(type_id,node_identity_id,json);
+		this.updateNodeIdentity(node_identity_id,node_data_id);
+	}
+
+	@Public void UpdateNode(int argument_id, Json json) {
+		int node_identity_id = json.getInt("NodeIdentityId");
 		int type_id = this.getNodeType(json.getString("NodeType"));
 		int node_data_id = this.updateNodeDataFromJson(type_id,node_identity_id,json);
 		this.updateNodeIdentity(node_identity_id,node_data_id);
@@ -549,10 +570,10 @@ class DCaseModel {
 		return r.getInt("current_process_id");
 	}
 
-	void createNodeList(int argument_id, Json node_list) {
+	void createNodeList(int argument_id, Json node_list, Map[int] m) {
 		int i = 0;
 		while(i < node_list.getSize()) {
-			this.CreateNode(argument_id,node_list[i]);
+			this.CreateNode(argument_id,node_list[i],m);
 			i = i + 1;
 		}
 	}
@@ -582,12 +603,13 @@ class DCaseModel {
 
 		Json commit = args;//.get("commit");
 
+		Map[int] m = new Map[int];
 		int i = 0;
 		while(i < commit.getSize()) {
 			String command = commit[i].getString("command");
 			Json node_list = commit[i].get("NodeList");
 			if(command == "insert") {
-				this.createNodeList(argument_id,node_list);
+				this.createNodeList(argument_id,node_list,m);
 			} else if(command == "replace") {
 				this.replaceNodeList(argument_id,node_list);
 			} else if(command == "delete") {
@@ -636,6 +658,11 @@ class DCaseModel {
 	@Public Json GetContext(int NodeId) {
 		Json node = this.GetNode(NodeId);
 		Json childIds = node.get("Children");
+		int i = 0;
+		while(i < childIds.getSize()) {
+			Json child = this.GetNode(childIds[i]);
+			i = i + 1;
+		}
 	}
 
 	@Public int Support(int EvidenceNodeId, int ArgumentId, int ProcessId) {
