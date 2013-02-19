@@ -33,7 +33,7 @@ void main() {
 	//if (!method.paramCheck(j.get("params"))) {
 		// error handling
 	//}
-	stdout.println("Content-Type: application/json; charset=utf-8\n\n");
+	stdout.print("Content-Type: application/json; charset=utf-8\n\n");
 	api.dispatch(j.getString("method"),j.get("params"));
 }
 

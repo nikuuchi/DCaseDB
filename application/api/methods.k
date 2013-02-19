@@ -50,7 +50,7 @@ void CreateTopGoal (Json request) {
 	Json res = new Json();
 	res.setInt("BelongedArgumentId",ArgumentId);
 	Json response = createMessage(res);
-	stdout.println(response);
+	stdout.print(response);
 }
 
 /*
@@ -59,7 +59,7 @@ void DeleteLink (Json request) {
 	int ParentNodeId = request.getInt("ParentNodeId");
 	Json TargetNode = request.get("TargetNode");
 	Json response = createMessage("FIXME");
-	stdout.println(response);
+	stdout.print(response);
 }
 
 //FIXME
@@ -67,7 +67,7 @@ void NewLink (Json request) {
 	int ParentNodeId = request.getInt("ParentNodeId");
 	int TargetNodeId = request.getInt("TargetNodeId");
 	Json response = createMessage("FIXME");
-	stdout.println(response);
+	stdout.print(response);
 }
 */
 
@@ -77,21 +77,21 @@ void CreateNode (Json request) {
 	int BelongedArgumentId = request.getInt("BelongedArgumentId");
 	Json json = request.get("Node");
 	Json response = createMessage("FIXME");
-	stdout.println(response);
+	stdout.print(response);
 }
 
 void UpdateNode (Json request) {
 	int BelongedArgumentId = request.getInt("BelongedArgumentId");
 	Json json = request.get("json");
 	Json response = createMessage("FIXME");
-	stdout.println(response);
+	stdout.print(response);
 }
 
 void DeleteNode (Json request) {
 	int BelongedArgumentId = request.getInt("BelongedArgumentId");
 	Json json = request.get("json");
 	Json response = createMessage("FIXME");
-	stdout.println(response);
+	stdout.print(response);
 }
 */
 
@@ -102,7 +102,7 @@ void FindNodeFrom (Json request) {
 	int NodeIdSearchFrom = request.getInt("NodeIdSearchFrom");
 	int[] res = global.model.FindNodeFrom(NodeType, NodeIdSearchFrom);
 	Json response = createMessage(ConvertFromIntList(res));
-	stdout.println(response);
+	stdout.print(response);
 }
 */
 
@@ -112,7 +112,7 @@ void FindNodeByDescription (Json request) {
 	Json res_json = new Json();
 	res_json.set("NodeIdList",ConvertFromIntList(res));
 	Json response = createMessage(res_json);
-	stdout.println(response);
+	stdout.print(response);
 }
 
 void FindContextByAttribute (Json request) {
@@ -121,7 +121,7 @@ void FindContextByAttribute (Json request) {
 	Json res_json = new Json();
 	res_json.set("NodeIdList",ConvertFromIntList(res));
 	Json response = createMessage(res_json);
-	stdout.println(response);
+	stdout.print(response);
 }
 
 void Commit (Json request) {
@@ -129,7 +129,7 @@ void Commit (Json request) {
 	Json args = request.get("commit");
 	global.model.Commit(BelongedArgumentId,args);
 	Json response = createMessage(new Json()); //FIXME Response is void
-	stdout.println(response);
+	stdout.print(response);
 }
 
 void getNode (Json request) {
@@ -138,7 +138,7 @@ void getNode (Json request) {
 	Json res = new Json();
 	res.set("Node",node);
 	Json response = createMessage(res);
-	stdout.println(response);
+	stdout.print(response);
 }
 
 void getArgumentList (Json request) {
@@ -146,7 +146,7 @@ void getArgumentList (Json request) {
 	Json res = new Json();
 	res.set("ArgumentIdList", ConvertFromIntList(argumentIdList));
 	Json response = createMessage(res);
-	stdout.println(response);
+	stdout.print(response);
 }
 
 void getNodeTree (Json request) {
@@ -155,7 +155,7 @@ void getNodeTree (Json request) {
 	Json res = new Json();
 	res.set("Tree",NodeTree);
 	Json response = createMessage(res);
-	stdout.println(response);
+	stdout.print(response);
 }
 
 void getNodeTreeFromSnapshotId (Json request) {
@@ -165,7 +165,7 @@ void getNodeTreeFromSnapshotId (Json request) {
 	Json res = new Json();
 	res.set("Tree",NodeTree);
 	Json response = createMessage(res);
-	stdout.println(response);
+	stdout.print(response);
 }
 
 void getNodeTreeBetween (Json request) {
@@ -176,7 +176,7 @@ void getNodeTreeBetween (Json request) {
 	Json res = new Json();
 	res.set("Tree",NodeTree); //FIXME
 	Json response = createMessage(res);
-	stdout.println(response);
+	stdout.print(response);
 }
 
 void OpenProcessContext (Json request) {
@@ -187,7 +187,7 @@ void OpenProcessContext (Json request) {
 	int processId = global.model.OpenProcessContext(BelongedArgumentId,process_type,Justification,commiter_name);
 	Json res = Json.parse("{\"ProcessId\":${processId}}");
 	Json response = createMessage(res);
-	stdout.println(response);
+	stdout.print(response);
 }
 
 //FIXME
@@ -196,7 +196,7 @@ void CloseProcessContext (Json request) {
 	int process_id = request.getInt("ProcessId");
 	String Justification = request.getString("Justification");
 	Json response = createMessage(new Json());
-	stdout.println(response);
+	stdout.print(response);
 }
 
 void getProcessContextIds (Json request) {
@@ -205,7 +205,7 @@ void getProcessContextIds (Json request) {
 	Json res_json = new Json();
 	res_json.set("ProcessIdList",ConvertFromIntList(res));
 	Json response = createMessage(res_json);
-	stdout.println(response);
+	stdout.print(response);
 }
 
 void getSnapshotList (Json request) {
@@ -214,7 +214,7 @@ void getSnapshotList (Json request) {
 	Json res_json = new Json();
 	res_json.set("SnapshotIdList",ConvertFromIntList(res));
 	Json response = createMessage(res_json);
-	stdout.println(response);
+	stdout.print(response);
 }
 
 /*
@@ -222,14 +222,14 @@ void getSnapshotList (Json request) {
 void getContext (Json request) {
 	int NodeId = request.getInt("NodeId");
 	Json response = createMessage("FIXME");
-	stdout.println(response);
+	stdout.print(response);
 }
 
 void Support (Json request) {
 	int EvidenceNodeId = request.getInt("EvidenceNodeId");
 	int ProcessId = request.getInt("ProcessId");
 	Json response = createMessage("FIXME");
-	stdout.println(response);
+	stdout.print(response);
 }
 
 void Rebuttal (Json request) {
@@ -237,7 +237,7 @@ void Rebuttal (Json request) {
 	int ProcessId = request.getInt("ProcessId");
 	String Diagnosis = request.getString("Diagnosis");
 	Json response = createMessage("FIXME");
-	stdout.println(response);
+	stdout.print(response);
 }
 */
 
