@@ -30,7 +30,7 @@ void main() {
 	json_node1.set("Attributes"           , attr);
 
 	commitObj1_nodelist.add(json_node1);
-	commitObj1.set("node-list",commitObj1_nodelist);
+	commitObj1.set("NodeList",commitObj1_nodelist);
 	commit.add(commitObj1);
 	json.set("commit",commit);
 	System.p(json);

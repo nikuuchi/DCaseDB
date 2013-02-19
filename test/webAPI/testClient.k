@@ -8,7 +8,7 @@ Import("Syntax.StringInterpolation");
 class HttpClient {
 	String url = "";
 	@Virtual String perform() { return ""; }
-	@Virtual String post(Map[String] fields) { return ""}
+	@Virtual String post(String params) { return ""}
 	@Virtual String get(Map[String] fields)  { return ""}
 }
 
@@ -37,12 +37,13 @@ class CurlHttpClient extends HttpClient {
 		}
 		return param;
 	}
-	String post(Map[String] fields) {
+	String post(String params) {
 		curl.setOpt(CURLOPT_POST, true);
-		String param = CreateParam(fields);
-		curl.setOpt(CURLOPT_POSTFIELDS, param);
+		//String param = CreateParam(fields);
+		curl.setOpt(CURLOPT_POSTFIELDS, params);
 		return perform();
 	}
+
 	String get(Map[String] fields) {
 		curl.setOpt(CURLOPT_GET, true);
 		if (fields.getSize() > 0) {

@@ -23,7 +23,7 @@ String getMsg() {
 	while ((ln = f.readLine()) != null) {
 		query = query + ln;
 	}
-	return query.slice(5);
+	return query;//.slice(5);
 }
 
 void main() {

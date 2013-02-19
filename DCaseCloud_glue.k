@@ -634,11 +634,41 @@ class DCaseModel {
 //### D-Script
 	//return ContextJson
 	@Public Json GetContext(int NodeId) {
+		Json node = this.GetNode(NodeId);
+		Json childIds = node.get("Children");
 	}
 
-	@Public void Support(int EvidenceNodeId, int ProcessId) {
+	@Public int Support(int EvidenceNodeId, int ArgumentId, int ProcessId) {
+		Json support = new Json();
+		support.setString("NodeType","Support");
+		support.setInt("ParentNodeId"      , EvidenceNodeId);
+		support.setInt("ThisNodeId"        , 0);
+		support.setInt("PrevNodeId"        , 0);
+		support.setInt("NextNodeId"        , 0);
+		support.setInt("BelongedArgumentId", ArgumentId);
+		support.set("Children"             , new Json([]));
+		support.setString("Description"    , Diagnosis);
+		Json attr = new Json();
+		support.set("Attributes"           , attr);
+		int nodeId = this.CreateNode(ArgumentId, support);
+		this.CreateLink(ArgumentId,EvidenceNodeId,nodeId);
+		return nodeId;
 	}
 
-	@Public void Rebuttal(int EvidenceNodeId, int ProcessId, String Diagnosis) {
+	@Public int Rebuttal(int EvidenceNodeId, int ArgumentId, int ProcessId, String Diagnosis) {
+		Json rebuttal = new Json();
+		rebuttal.setString("NodeType","Rebuttal");
+		rebuttal.setInt("ParentNodeId"      , EvidenceNodeId);
+		rebuttal.setInt("ThisNodeId"        , 0);
+		rebuttal.setInt("PrevNodeId"        , 0);
+		rebuttal.setInt("NextNodeId"        , 0);
+		rebuttal.setInt("BelongedArgumentId", ArgumentId);
+		rebuttal.set("Children"             , new Json([]));
+		rebuttal.setString("Description"    , Diagnosis);
+		Json attr = new Json();
+		rebuttal.set("Attributes"           , attr);
+		int nodeId = this.CreateNode(ArgumentId,rebuttal);
+		this.CreateLink(ArgumentId,EvidenceNodeId,nodeId);
+		return nodeId;
 	}
 }

@@ -13,3 +13,5 @@ INSERT INTO `node_type` (`type_name`) VALUES
 ('Strategy'),
 ('Context'),
 ('Evidence');
+('Support');
+('Rebuttal');
