@@ -151,7 +151,7 @@ class DCaseModel {
 	}
 
 	Json GetChildLinkList(int node_id) {
-			PreparedStatement q = this.db.newPreparedStatement("SELECT node_child_id FROM node_link_has_snapshot INNER JOIN node_link ON node_link_id=node_link.id WHERE node_parent_id=?"); //FIXME snapshot_id
+		PreparedStatement q = this.db.newPreparedStatement("SELECT node_child_id FROM node_link_has_snapshot INNER JOIN node_link ON node_link_id=node_link.id WHERE node_parent_id=?"); //FIXME snapshot_id
 		q.setInt("@b", node_id);
 		ResultSet r = q.execute();
 		Json json = new Json([]);
@@ -162,7 +162,7 @@ class DCaseModel {
 	}
 
 	Json GetChildLinkList(int node_id, int snapshot_id) {
-			PreparedStatement q = this.db.newPreparedStatement("SELECT node_child_id FROM node_link_has_snapshot INNER JOIN node_link ON node_link_id=node_link.id WHERE node_parent_id=? AND snapshot_id=?"); //FIXME snapshot_id
+		PreparedStatement q = this.db.newPreparedStatement("SELECT node_child_id FROM node_link_has_snapshot INNER JOIN node_link ON node_link_id=node_link.id WHERE node_parent_id=? AND snapshot_id=?"); //FIXME snapshot_id
 		q.setInt("@b", node_id);
 		q.setInt("@a", snapshot_id);
 		ResultSet r = q.execute();
@@ -174,7 +174,7 @@ class DCaseModel {
 	}
 
 	Json GetLinkList(int snapshot_id) {
-			PreparedStatement q = this.db.newPreparedStatement("SELECT node_parent_id,node_child_id FROM node_link_has_snapshot INNER JOIN node_link ON node_link_id=node_link.id WHERE snapshot_id=?");
+		PreparedStatement q = this.db.newPreparedStatement("SELECT node_parent_id,node_child_id FROM node_link_has_snapshot INNER JOIN node_link ON node_link_id=node_link.id WHERE snapshot_id=?");
 		q.setInt("@a", snapshot_id);
 		ResultSet r = q.execute();
 		Json json_array = new Json([]);
@@ -189,7 +189,7 @@ class DCaseModel {
 	}
 
 	Json GetNodeList(int snapshot_id) {
-			PreparedStatement q = this.db.newPreparedStatement("SELECT node_data.id AS node_id,node_identity_id, url, description, delete_flag,type_name FROM node_data INNER JOIN snapshot_has_node_data ON node_data_id=node_data.id  INNER JOIN node_type ON node_type_id=node_type.id WHERE snapshot_id=?");
+		PreparedStatement q = this.db.newPreparedStatement("SELECT node_data.id AS node_id,node_identity_id, url, description, delete_flag,type_name FROM node_data INNER JOIN snapshot_has_node_data ON node_data_id=node_data.id  INNER JOIN node_type ON node_type_id=node_type.id WHERE snapshot_id=?");
 		q.setInt("@a", snapshot_id);
 		ResultSet r = q.execute();
 		Json json_array = new Json([]);
@@ -460,7 +460,7 @@ class DCaseModel {
 	@Public int CreateNode(int argument_id, Json json) {
 		int node_identity_id = this.initNode_identity(argument_id);
 		int type_id = this.getNodeType(json.getString("NodeType"))
-		int node_data_id = this.createNodeDataFromJson(type_id,node_identity_id,json);
+			int node_data_id = this.createNodeDataFromJson(type_id,node_identity_id,json);
 		this.updateNodeIdentity(node_identity_id,node_data_id);
 		return node_data_id;
 	}
@@ -471,7 +471,7 @@ class DCaseModel {
 		}
 		int node_identity_id = this.initNode_identity(argument_id);
 		int type_id = this.getNodeType(json.getString("NodeType"))
-		int node_data_id = this.createNodeDataFromJson(type_id,node_identity_id,json);
+			int node_data_id = this.createNodeDataFromJson(type_id,node_identity_id,json);
 		this.updateNodeIdentity(node_identity_id,node_data_id);
 		if(json.getInt("ThisNodeId")<0) {
 			m.set(json.getInt("ThisNodeId").toString(),node_data_id);
@@ -495,11 +495,11 @@ class DCaseModel {
 
 	@Public void DeleteNode(int argument_id, Json json) {
 		/* //TODO
-		int node_id = json.getString("node_id").toint;
-		int type_id = this.getNodeType(json.getString("type"));
-		int node_data_id = this.createNodeData(type_id,node_id,json.getString("description"),json.getString("url"));
-		this.updateNodeIdentity(node_id,node_data_id);
-		*/
+		   int node_id = json.getString("node_id").toint;
+		   int type_id = this.getNodeType(json.getString("type"));
+		   int node_data_id = this.createNodeData(type_id,node_id,json.getString("description"),json.getString("url"));
+		   this.updateNodeIdentity(node_id,node_data_id);
+		   */
 	}
 
 	//Return Array[NodeId]
@@ -624,7 +624,7 @@ class DCaseModel {
 		this.insertSnapshotNodeLink(snapshot_id,argument_id);
 	}
 
-// ProcessContext
+	// ProcessContext
 	//return ProcessId
 	@Public int OpenProcessContext(int argument_id, int process_type, String justification, String commiter_name) {
 		int current_snapshot_id = this.getCurrentSnapShot(argument_id); //FIXME
@@ -653,7 +653,7 @@ class DCaseModel {
 		return this._GetSnapshotList(0, end_id);
 	}
 
-//### D-Script
+	//### D-Script
 	//return ContextJson
 	@Public Json GetContext(int NodeId) {
 		Json node = this.GetNode(NodeId);
