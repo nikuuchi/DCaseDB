@@ -653,10 +653,16 @@ class DCaseModel {
 		return this._GetSnapshotList(0, end_id);
 	}
 
+	Json _GetContext(int NodeId, Json ret) {
+	}
 	//### D-Script
 	//return ContextJson
 	@Public Json GetContext(int NodeId) {
+		Json ret = new Json();
 		Json node = this.GetNode(NodeId);
+		if(node.getString("NodeType").toString() == "Context") {
+			return;
+		}
 		Json childIds = node.get("Children");
 		int i = 0;
 		while(i < childIds.getSize()) {

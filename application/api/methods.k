@@ -255,6 +255,7 @@ class JsonRPCServer {
 
 	void registerFunctions() {
 		this.functions.set("CreateTopGoal"        ,CreateTopGoal);
+		//TODO DeleteTopGoal
 		//this.functions.set("DeleteLink"           ,DeleteLink);
 		//this.functions.set("NewLink"              ,NewLink);
 		//this.functions.set("CreateNode"           ,CreateNode);

@@ -1,5 +1,6 @@
 ﻿# DCase Cloud
 ---
+##開発は https://github.com/konoha-project/AssuranceScriptEditor に移りました。
 ##開発環境
 * Ubuntu 12.04(amd64)
 * konoha3
